@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      target: dev-stage
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - ./frontend/ssl/cert:/app/ssl/cert
+    command: npm run dev
+    environment:
+      NODE_ENV: development
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - '27017:27017'
+    env_file:
+      - .env.main
+    volumes:
+      - mongo-data:/data/db
+      - ./backend/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js
+
+  redis:
+    image: redis:6.2
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  backend:
+    build:
+      context: ./backend
+      target: ${NODE_ENV:-development}
+    ports:
+      - '5443:5443' # https
+      - '5000:5000' # http
+    depends_on:
+      - mongo
+    env_file:
+      - ./backend/.env  # Path to the .env file
+    volumes:
+      - ./backend/src:/app/src:delegated
+      - ./backend/nodemon.json:/app/nodemon.json
+      - /app/node_modules
+      - ./backend/uploads:/app/uploads  # uploads
+      - ./backend/ssl/cert/certificate.pem:/app/cert/certificate.pem
+      - ./backend/ssl/cert/private-key.pem:/app/cert/private-key.pem
+
+volumes:
+  mongo-data:
+  uploads:
+  audio-samples:
+  redis-data:
