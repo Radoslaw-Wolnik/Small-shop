@@ -1,34 +1,38 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Secrets
+secrets/*
+!secrets/.gitkeep
+local_secrets.sh
 
-uploads
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Environment variables
+# Environment files
 .env
 .env.*
+!.env.example
 
-# ssl certificates
-private-key.pem
-certificate.pem
+# Node modules
+node_modules/
+
+# Build directories
+dist/
+build/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# SSL certificates (if not using dummy ones for development)
 *.pem
+*.key
+*.crt
+*.csr
+
+# Docker volumes
+mongo-data/
+redis-data/
+uploads/
