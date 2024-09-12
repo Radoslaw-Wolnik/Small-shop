@@ -44,49 +44,7 @@ export const setTokenCookie = (res: Response, token: string): void => {
   });
 };
 
-// middleware for authenticating admins
-export const authenticateAdmin = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  const token = req.cookies.token;
-
-  if (!token) {
-    throw new UnauthorizedError('Access denied. No token provided.');
-  }
-
-  try {
-    // Check if the token has been revoked
-    const revokedToken = await RevokedToken.findOne({ token: token });
-    if (revokedToken) {
-      throw new InvalidTokenError('Token has been revoked.');
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-    
-    // Fetch the user from the database to get the most up-to-date role information
-    const user = await User.findById(decoded.user.id);
-    
-    if (!user) {
-      throw new NotFoundError('User');
-    }
-
-    if (user.role !== 'admin') {
-      throw new ForbiddenError('Admin privileges required.');
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    if (error instanceof jwt.TokenExpiredError) {
-      throw new ExpiredTokenError();
-    } else if (error instanceof jwt.JsonWebTokenError) {
-      throw new InvalidTokenError();
-    } else {
-      throw new InternalServerError();
-    }
-  }
-};
-
-// middleware for general token authentication
-export const authenticateToken = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const authenticateJWT = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const token = req.cookies.token;
 
   if (!token) {
@@ -118,6 +76,22 @@ export const authenticateToken = async (req: AuthRequest, res: Response, next: N
     } else {
       throw new InternalServerError();
     }
+  }
+};
+
+export const isOwner = (req: AuthRequest, res: Response, next: NextFunction): void => {
+  if (req.user && req.user.role === 'owner') {
+    next();
+  } else {
+    throw new ForbiddenError('Owner privileges required.');
+  }
+};
+
+export const isAdmin = (req: AuthRequest, res: Response, next: NextFunction): void => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    throw new ForbiddenError('Admin privileges required.');
   }
 };
 
