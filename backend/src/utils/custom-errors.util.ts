@@ -134,3 +134,9 @@ export class FileSizeTooLargeError extends CustomError {
     super(`File size too large. Maximum allowed size is ${maxSize / (1024 * 1024)}MB`, 400);
   }
 }
+
+export class InsufficientStockError extends CustomError {
+  constructor(productName: string) {
+    super(`Insufficient stock for product: ${productName}`, 400);
+  }
+}
