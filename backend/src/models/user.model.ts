@@ -16,9 +16,14 @@ export interface IUserDocument extends Document {
   verificationTokenExpires?: Date;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
-  role: 'user' | 'admin';
+  role: 'client' | 'owner' | 'admin';
   createdAt: Date;
   updatedAt: Date;
+  wishlist: Types.ObjectId[];
+  notificationPreferences: {
+    promotions: boolean;
+    newsletters: boolean;
+  };
   getDecryptedEmail(): Promise<string>;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -68,8 +73,13 @@ const userSchema = new mongoose.Schema<IUserDocument, IUserModel>({
   resetPasswordToken: { type: String },
   resetPasswordExpires: Date,
 
-  role: { type: String, enum: ['user', 'admin'], default: 'user' }
+  role: { type: String, enum: ['client', 'owner', 'admin'], default: 'client' },
+  wishlist: [{ type: Types.ObjectId, ref: 'Product' }],
+  notificationPreferences: {
+    promotions: { type: Boolean, default: false },
+    newsletters: { type: Boolean, default: false },
   },
+},
   { timestamps: true }
 );
 
