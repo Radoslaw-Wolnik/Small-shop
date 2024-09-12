@@ -1,12 +1,14 @@
 // routes/adminRoutes.ts
 import express, { Router } from 'express';
-import { getAdmins, deleteAdmin, addAdmin } from '../controllers/admin.controller';
-import { authenticateAdmin } from '../middleware/auth.middleware';
+import { getAdmins, deleteAdmin, addAdmin, getAllUsers } from '../controllers/admin.controller';
+import { authenticateJWT, isAdmin } from '../middleware/auth.middleware';
 
 const router: Router = express.Router();
 
-router.get('/users', authenticateAdmin, getAdmins);
-router.delete('/users/:id', authenticateAdmin, deleteAdmin);
-router.post('/users', authenticateAdmin, addAdmin);
+router.get('/get', authenticateJWT, isAdmin, getAdmins);
+router.delete('/del/:id', authenticateJWT, isAdmin, deleteAdmin);
+router.post('/add', authenticateJWT, isAdmin, addAdmin);
+
+router.get('/allusers', authenticateJWT, isAdmin, getAllUsers);
 
 export default router;

@@ -14,7 +14,7 @@ import {
     requestPasswordReset,
     resetPassword
 } from '../controllers/auth.controller.js';
-import { authenticateToken, handlePostRegistrationAuth } from '../middleware/auth.middleware.js';
+import { authenticateJWT, handlePostRegistrationAuth } from '../middleware/auth.middleware.js';
 
 const router: Router = express.Router();
 
@@ -24,14 +24,14 @@ router.post('/login', login);
 // Post-registration login route
 router.post('/reg-login', handlePostRegistrationAuth, postRegistrationLogin);
 
-router.post('/logout', authenticateToken, logout);
+router.post('/logout', authenticateJWT, logout);
 
-router.post('/refresh-token', authenticateToken, refreshToken);
+router.post('/refresh-token', authenticateJWT, refreshToken);
 
-router.post('/send-verification', authenticateToken, sendVerificationEmail);
+router.post('/send-verification', authenticateJWT, sendVerificationEmail);
 router.get('/verify-email/:token', verifyEmail);
 
-router.put('/change-password', authenticateToken, changePassword);
+router.put('/change-password', authenticateJWT, changePassword);
 router.post('/request-password-reset', requestPasswordReset);
 router.post('/reset-password/:token', resetPassword);
 
