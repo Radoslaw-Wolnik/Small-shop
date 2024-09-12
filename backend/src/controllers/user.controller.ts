@@ -74,3 +74,47 @@ export const getOtherUserProfile = async (req: Request, res: Response, next: Nex
     next(error instanceof CustomError ? error : new InternalServerError('Error fetching user profile'));
   }
 };
+
+export const updateProfile = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.user!.id, req.body, { new: true }).select('-password');
+    if (!user) {
+      throw new NotFoundError('User');
+    }
+    res.json(user);
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error updating user profile'));
+  }
+};
+
+export const addToWishlist = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user!.id,
+      { $addToSet: { wishlist: req.body.productId } },
+      { new: true }
+    ).select('-password');
+    if (!user) {
+      throw new NotFoundError('User');
+    }
+    res.json(user);
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error adding product to wishlist'));
+  }
+};
+
+export const removeFromWishlist = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user!.id,
+      { $pull: { wishlist: req.params.productId } },
+      { new: true }
+    ).select('-password');
+    if (!user) {
+      throw new NotFoundError('User');
+    }
+    res.json(user);
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error removing product from wishlist'));
+  }
+};

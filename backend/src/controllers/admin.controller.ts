@@ -1,6 +1,5 @@
 // adminController.ts
 import { Response, NextFunction } from 'express';
-import bcrypt from 'bcrypt'; // where is it used and wheather it should be?
 import { NotFoundError, InternalServerError, ValidationError, CustomError, ResourceExistsError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 
@@ -13,6 +12,16 @@ export const getAdmins = async (req: AuthRequest, res: Response, next: NextFunct
     res.json(admins);
   } catch (error) {
     next(new InternalServerError('Error fetching admins'));
+  }
+};
+
+export const getAllUsers = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const users = await User.find().select('-password');
+    logger.info('Admin list retrieved', { userId: req.user?.id, count: users.length });
+    res.json(users);
+  } catch (error) {
+    next(new InternalServerError('Error fetching all users'));
   }
 };
 
