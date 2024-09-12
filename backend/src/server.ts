@@ -1,46 +1,71 @@
-import https from 'https';
-import http from 'http';
-import fs from 'fs';
-import path from 'path';
+import * as http from 'http';
+import mongoose from 'mongoose';
 
 import app from './app.js';
-import connectDB from './config/database';
-import env from './config/environment';
+import connectDB from './utils/db-connection.util.js';
+import environment from './config/environment.js';
+import logger from './utils/logger.util';
+import { initCleanupJob } from './scripts/cleanup-revoked-tokens.js';
+import { gracefulShutdown } from './utils/server.util';
 
-const HTTPS_PORT: number = env.PORT;
-const HTTP_PORT: number = env.PORT_HTTP;
-
-const options = {
-  //key: fs.readFileSync(path.join(__dirname, '../ssl/cert/private-key.pem')),
-  //cert: fs.readFileSync(path.join(__dirname, '../ssl/cert/certificate.pem'))
-  key: fs.readFileSync(path.join('/app/cert/private-key.pem')),
-  cert: fs.readFileSync(path.join('/app/cert/certificate.pem'))
-};
+// Set port from environment or fallback to 5000
+const PORT: number = environment.app.port || 5000;
 
 const startServer = async () => {
   try {
+    // Connect to the database
+    const startTime = Date.now();
     await connectDB();
+    const connectionTime = Date.now() - startTime;
+    logger.info('Connected to database', { connectionTimeMs: connectionTime });
 
-    // create HTTPS server
-    const server: https.Server = https.createServer(options, app);
-    server.listen(HTTPS_PORT, () => {
-      console.log(`HTTPS Server running in ${env.NODE_ENV} mode on port ${HTTPS_PORT}`);
+    // Initialize background jobs
+    await initCleanupJob();
+    logger.info('Background jobs initialized');
+    
+    const server: http.Server = http.createServer(app);
+    server.listen(PORT, () => {
+      logger.info(`Server running in ${environment.app.nodeEnv} mode on port ${PORT}`);
     });
 
-    // Create a separate HTTP server that redirects all requests to HTTPS
-    const httpServer: http.Server = http.createServer((req, res) => {
-      res.writeHead(301, { "Location": `https://${req.headers.host?.split(':')[0]}:${HTTPS_PORT}${req.url}` });
-      res.end();
+    // Global error handler for uncaught exceptions
+    process.on('uncaughtException', (error: Error) => {
+      logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
+      gracefulShutdown(server, 1);
     });
 
-    httpServer.listen(HTTP_PORT, () => {
-      console.log(`HTTP Server running on port ${HTTP_PORT}, redirecting all traffic to HTTPS`);
+    // Global error handler for unhandled promise rejections
+    process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
+      logger.error('Unhandled Rejection', { reason, promise });
+      gracefulShutdown(server, 1);
     });
+
+    // Graceful shutdown on SIGTERM (e.g., Docker, Heroku)
+    process.on('SIGTERM', () => {
+      logger.info('SIGTERM signal received. Shutting down gracefully.');
+      gracefulShutdown(server, 0);
+    });
+
+    // Graceful shutdown on SIGINT (e.g., Ctrl+C)
+    process.on('SIGINT', () => {
+      logger.info('SIGINT signal received. Shutting down gracefully.');
+      gracefulShutdown(server, 0);
+    });
+
+    
 
   } catch (error) {
-    console.error('Failed to start the server:', (error as Error).message);
+    logger.error('Failed to start the server:', {
+      error,
+      stack: (error as Error).stack,
+      memoryUsage: process.memoryUsage()
+    });
     process.exit(1);
   }
 };
 
 startServer();
+
+// set this up in docker container policy
+// eg
+// restart: unless-stopped

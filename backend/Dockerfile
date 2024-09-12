@@ -1,8 +1,11 @@
-# Use Node.js LTS version as base image
-FROM node:20 AS builder
+# Base stage
+FROM node:20 AS base
 
 # Set working directory inside the container
 WORKDIR /app
+
+# Update npm to the latest version and clear npm cache
+RUN npm install -g npm@latest && npm cache clean --force
 
 # Copy package.json and package-lock.json to install dependencies
 COPY package*.json ./
@@ -14,30 +17,34 @@ RUN npm ci
 COPY . .
 
 # Development stage
-FROM node:20 AS development
+FROM base AS development
 
-WORKDIR /app
+# Install ts globaly
+RUN npm install -g tsx@latest typescript@latest
 
-# Copy all files from the builder stage
-COPY --from=builder /app .
 
 # Copy additional development-specific configuration files
-COPY nodemon.json .
-COPY .env .env
-COPY ssl/cert/certificate.pem /app/cert/certificate.pem
-COPY ssl/cert/private-key.pem /app/cert/private-key.pem
+# COPY nodemon.json .
+# or insted in volumes in docekr-compose
 
-# make uploads dir in development setup
+# Make uploads dir in development setup
 RUN mkdir -p /app/uploads
-
-# Reinstall node_modules to ensure compatibility
-RUN npm ci
 
 # Expose port 5000 for development
 EXPOSE 5000
 
 # Command to run the application in development mode
-CMD ["npm", "run", "devstart"]
+#CMD ["npm", "run", "devstart"]
+# Use ts-node-dev for development
+#CMD ["npx", "nodemon", "--exec", "node", "--loader", "ts-node/esm", "src/server.ts"]
+CMD ["npm", "run", "dev"]
+
+
+# Build stage
+FROM base AS build
+
+# Build TypeScript
+RUN npm run build
 
 # Production stage
 FROM node:20-slim AS production
@@ -45,29 +52,23 @@ FROM node:20-slim AS production
 WORKDIR /app
 
 # Copy package.json and package-lock.json for production install
-COPY --from=builder /app/package*.json ./
+COPY --from=build /app/package*.json ./
+
+# Copy compiled JavaScript files
+COPY --from=build /app/dist ./dist
 
 # Install production dependencies
 RUN npm ci --only=production
 
-# Copy source files from the builder stage
-COPY --from=builder /app/src ./src
-
-# Copy production environment configuration
-COPY .env .env
-
-# copy the certificate, private key
-COPY ssl/cert/certificate.pem /app/cert/certificate.pem
-COPY ssl/cert/private-key.pem /app/cert/private-key.pem
-
-# make uploads dir in production
+# Make uploads dir in production
 RUN mkdir -p /app/uploads
 
-# Expose port 3000 for production
-EXPOSE 3000
+# Expose port for production
+EXPOSE 5000
 
 # Set environment variable for production
 ENV NODE_ENV=production
 
 # Command to run the application in production mode
 CMD ["npm", "run", "start"]
+# CMD ["node", "dist/server.js"]
