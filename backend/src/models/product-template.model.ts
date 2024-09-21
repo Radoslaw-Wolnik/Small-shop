@@ -1,24 +1,34 @@
-// src/models/productTemplate.model.ts
+// src/models/product-template.model.ts
 import mongoose, { Document, Schema } from 'mongoose';
 
-export interface IProductTemplateDocument extends Document {
+interface IProductTemplateDocument extends Document {
   name: string;
   category: Schema.Types.ObjectId;
-  variations: {
-    type: string;
-    options: string[];
-    affectsPrice: boolean;
-  }[];
+  tags: string[];
+  variants: Schema.Types.ObjectId[];
+  shippingDetails: {
+    weight: number;
+    dimensions: {
+      length: number;
+      width: number;
+      height: number;
+    };
+  };
 }
 
 const productTemplateSchema = new Schema<IProductTemplateDocument>({
   name: { type: String, required: true },
   category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
-  variations: [{
-    type: { type: String, required: true },
-    options: [String],
-    affectsPrice: { type: Boolean, default: false },
-  }],
+  tags: [{ type: String }],
+  variants: [{ type: Schema.Types.ObjectId, ref: 'Variant' }],
+  shippingDetails: {
+    weight: Number,
+    dimensions: {
+      length: Number,
+      width: Number,
+      height: Number,
+    },
+  },
 });
 
 export const ProductTemplate = mongoose.model<IProductTemplateDocument>('ProductTemplate', productTemplateSchema);
