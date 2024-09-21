@@ -4,8 +4,8 @@ import { NotFoundError, InternalServerError, ValidationError, CustomError, Resou
 import logger from '../utils/logger.util';
 
 import User from '../models/user.model';
-import { EmailTemplate } from '../models/email-template.model'; // separate controller ?
-import { Product } from '../models/product.model'; // in product controller ? 
+import EmailTemplate from '../models/email-template.model'; // separate controller ?
+import Product from '../models/product.model'; // in product controller ? 
 
 export const getAdmins = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
