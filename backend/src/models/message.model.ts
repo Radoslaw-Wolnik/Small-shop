@@ -2,16 +2,20 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IMessageDocument extends Document {
-  user: Schema.Types.ObjectId;
+  sender: Schema.Types.ObjectId;
   content: string;
-  isRead: boolean;
+  readStatus: boolean;
+  category: 'dispute' | 'contact' | 'other';
+  relatedOrder?: Schema.Types.ObjectId;
   createdAt: Date;
 }
 
 const messageSchema = new Schema<IMessageDocument>({
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  sender: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   content: { type: String, required: true },
-  isRead: { type: Boolean, default: false },
+  readStatus: { type: Boolean, default: false },
+  category: { type: String, enum: ['dispute', 'contact', 'other'], required: true },
+  relatedOrder: { type: Schema.Types.ObjectId, ref: 'Order' },
   createdAt: { type: Date, default: Date.now },
 });
 

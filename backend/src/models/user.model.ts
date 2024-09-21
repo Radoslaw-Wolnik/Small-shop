@@ -21,8 +21,10 @@ export interface IUserDocument extends Document {
   updatedAt: Date;
   wishlist: Types.ObjectId[];
   notificationPreferences: {
-    promotions: boolean;
+    email: boolean;
+    //promotions: boolean;
     newsletters: boolean;
+    orderupdates: boolean;
   };
   getDecryptedEmail(): Promise<string>;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -76,8 +78,10 @@ const userSchema = new mongoose.Schema<IUserDocument, IUserModel>({
   role: { type: String, enum: ['client', 'owner', 'admin'], default: 'client' },
   wishlist: [{ type: Types.ObjectId, ref: 'Product' }],
   notificationPreferences: {
-    promotions: { type: Boolean, default: false },
+    email: { type: Boolean, default: true },
+    //promotions: { type: Boolean, default: false },
     newsletters: { type: Boolean, default: false },
+    orderUpdates: { type: Boolean, default: true },
   },
 },
   { timestamps: true }
