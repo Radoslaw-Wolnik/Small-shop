@@ -7,6 +7,7 @@ export interface IMessageDocument extends Document {
   readStatus: boolean;
   category: 'dispute' | 'contact' | 'other';
   relatedOrder?: Schema.Types.ObjectId;
+  relatedDispute?: Schema.Types.ObjectId;
   createdAt: Date;
 }
 
@@ -16,7 +17,7 @@ const messageSchema = new Schema<IMessageDocument>({
   readStatus: { type: Boolean, default: false },
   category: { type: String, enum: ['dispute', 'contact', 'other'], required: true },
   relatedOrder: { type: Schema.Types.ObjectId, ref: 'Order' },
-  createdAt: { type: Date, default: Date.now },
-});
+  relatedDispute: { type: Schema.Types.ObjectId, ref: 'Dispute' },
+}, { timestamps: true });
 
 export const Message = mongoose.model<IMessageDocument>('Message', messageSchema);
