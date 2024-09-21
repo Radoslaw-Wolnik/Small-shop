@@ -23,5 +23,4 @@ export interface IPromotionCodeDocument extends Document {
     isActive: { type: Boolean, default: true },
   });
   
-  export const PromoCode = mongoose.model<IPromotionCodeDocument>('PromotionCode', promotionCodeSchema);
-  
+export default mongoose.model<IPromotionCodeDocument>('PromotionCode', promotionCodeSchema);

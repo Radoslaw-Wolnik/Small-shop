@@ -15,4 +15,4 @@ const variantSchema = new Schema<IVariantDocument>({
   options: [{ type: String }],
 });
 
-export const Variant = mongoose.model<IVariantDocument>('Variant', variantSchema);
+export default mongoose.model<IVariantDocument>('Variant', variantSchema);

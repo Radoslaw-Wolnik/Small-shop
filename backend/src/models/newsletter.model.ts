@@ -21,5 +21,4 @@ const newsletterSchema = new Schema<INewsletterDocument>({
   status: { type: String, enum: ['draft', 'scheduled', 'sent', 'cancelled'], default: 'draft' },
 }, { timestamps: true });
 
-const Newsletter = mongoose.model<INewsletterDocument>('Newsletter', newsletterSchema);
-export default Newsletter;
+export default mongoose.model<INewsletterDocument>('Newsletter', newsletterSchema);

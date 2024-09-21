@@ -137,6 +137,4 @@ userSchema.methods.comparePassword = async function(this: IUserDocument, candida
   }
 };
 
-const User = mongoose.model<IUserDocument, IUserModel>('User', userSchema);
-
-export default User;
+export default mongoose.model<IUserDocument, IUserModel>('User', userSchema);

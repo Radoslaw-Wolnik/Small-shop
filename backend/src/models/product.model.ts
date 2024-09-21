@@ -126,4 +126,4 @@ productSchema.methods.getStructuredData = function() {
   };
 };
 
-export const Product = mongoose.model<IProductDocument>('Product', productSchema);
+export default mongoose.model<IProductDocument>('Product', productSchema);

@@ -25,5 +25,5 @@ export interface ISiteSettingsDocument extends Document {
     logoUrl: String,
   });
   
-  export const SiteSettings = mongoose.model<ISiteSettingsDocument>('SiteSettings', siteSettingsSchema);
+  export default mongoose.model<ISiteSettingsDocument>('SiteSettings', siteSettingsSchema);
   
