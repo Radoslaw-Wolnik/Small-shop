@@ -45,6 +45,7 @@ export interface IProductDocument extends Document {
     keywords: string[];
     slug: string;
   };
+  isActive: boolean;
 }
 
 const productSchema = new Schema<IProductDocument>({
@@ -90,6 +91,7 @@ const productSchema = new Schema<IProductDocument>({
     keywords: [{ type: String }],
     slug: { type: String, required: true, unique: true },
   },
+  isActive: { type: Boolean, default: true },
 });
 
 // pre-save hook to generate the slug

@@ -26,6 +26,7 @@ export interface IUserDocument extends Document {
     newsletters: boolean;
     orderupdates: boolean;
   };
+  isMagicLinkUser: boolean;
   getDecryptedEmail(): Promise<string>;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -83,6 +84,7 @@ const userSchema = new mongoose.Schema<IUserDocument, IUserModel>({
     newsletters: { type: Boolean, default: false },
     orderUpdates: { type: Boolean, default: true },
   },
+  isMagicLinkUser: { type: Boolean, default: false },
 },
   { timestamps: true }
 );

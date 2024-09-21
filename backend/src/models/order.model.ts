@@ -31,6 +31,10 @@ export interface IOrderDocument extends Document {
   };
   createdAt: Date;
   updatedAt: Date;
+
+  magicLink?: string;
+  magicLinkExpires?: Date;
+  customerEmail?: string; // For non-logged in users
 }
 
 const orderSchema = new Schema<IOrderDocument>({
@@ -65,6 +69,11 @@ const orderSchema = new Schema<IOrderDocument>({
     status: { type: String, enum: ['open', 'under review', 'resolved'] },
     resolution: String,
   },
+
+  // for not logged in users
+  magicLink: String,
+  magicLinkExpires: Date,
+  customerEmail: String,
 }, { timestamps: true });
 
 export const Order = mongoose.model<IOrderDocument>('Order', orderSchema);
