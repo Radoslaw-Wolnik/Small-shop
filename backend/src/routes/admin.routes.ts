@@ -1,14 +1,27 @@
 // routes/adminRoutes.ts
 import express, { Router } from 'express';
-import { getAdmins, deleteAdmin, addAdmin, getAllUsers } from '../controllers/admin.controller';
 import { authenticateJWT, isAdmin } from '../middleware/auth.middleware';
+import {
+  getAdmins,
+  getAllUsers,
+  deleteAdmin,
+  addAdmin,
+  updateEmailTemplate,
+  deleteProduct
+} from '../controllers/admin.controller';
 
 const router: Router = express.Router();
 
-router.get('/get', authenticateJWT, isAdmin, getAdmins);
-router.delete('/del/:id', authenticateJWT, isAdmin, deleteAdmin);
-router.post('/add', authenticateJWT, isAdmin, addAdmin);
+// Ensure all routes are protected and require admin privileges
+router.use(authenticateJWT, isAdmin);
 
-router.get('/allusers', authenticateJWT, isAdmin, getAllUsers);
+router.get('/admins', getAdmins);
+router.get('/users', getAllUsers);
+
+router.delete('/admin/:id', deleteAdmin);
+router.post('/add', addAdmin);
+
+router.put('/email-template/:id', updateEmailTemplate);
+router.delete('/product/:id', deleteProduct);
 
 export default router;

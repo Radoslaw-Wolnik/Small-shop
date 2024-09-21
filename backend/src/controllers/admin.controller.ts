@@ -4,6 +4,8 @@ import { NotFoundError, InternalServerError, ValidationError, CustomError, Resou
 import logger from '../utils/logger.util';
 
 import User from '../models/user.model';
+import { EmailTemplate } from '../models/email-template.model'; // separate controller ?
+import { Product } from '../models/product.model'; // in product controller ? 
 
 export const getAdmins = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -73,3 +75,45 @@ export const addAdmin = async (req: AddAdminRequest, res: Response, next: NextFu
     }
   }
 };
+
+
+export const updateEmailTemplate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { name, subject, body, variables } = req.body;
+
+    const updatedTemplate = await EmailTemplate.findByIdAndUpdate(id, 
+      { name, subject, body, variables },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedTemplate) {
+      throw new NotFoundError('Email template');
+    }
+
+    logger.info('Email template updated', { templateId: id, updatedBy: req.user?.id });
+    res.json(updatedTemplate);
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error updating email template'));
+  }
+};
+
+export const deleteProduct = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const deletedProduct = await Product.findByIdAndUpdate(id, { isActive: false }, { new: true });
+    if (!deletedProduct) {
+      throw new NotFoundError('Product');
+    }
+    // Remove product from all wishlists
+    await User.updateMany(
+      { wishlist: id },
+      { $pull: { wishlist: id } }
+    );
+    logger.info('Product deleted and removed from wishlists', { productId: id, deletedBy: req.user?.id });
+    res.status(204).send();
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error deleting product'));
+  }
+};
+
