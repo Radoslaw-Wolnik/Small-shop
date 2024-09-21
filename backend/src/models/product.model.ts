@@ -39,6 +39,12 @@ export interface IProductDocument extends Document {
       weight: number;
     }[];
   };
+  seo: {
+    metaTitle: string;
+    metaDescription: string;
+    keywords: string[];
+    slug: string;
+  };
 }
 
 const productSchema = new Schema<IProductDocument>({
@@ -78,6 +84,44 @@ const productSchema = new Schema<IProductDocument>({
       weight: Number,
     }],
   },
+  seo: {
+    metaTitle: { type: String, required: true },
+    metaDescription: { type: String, required: true },
+    keywords: [{ type: String }],
+    slug: { type: String, required: true, unique: true },
+  },
 });
+
+// pre-save hook to generate the slug
+productSchema.pre('save', function(next) {
+  if (!this.seo.slug) {
+    this.seo.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  }
+  next();
+});
+
+
+// Example of implementing schema.org structured data in Product model
+productSchema.methods.getStructuredData = function() {
+  return {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": this.name,
+    "description": this.description,
+    "sku": this._id,
+    "image": this.defaultPhoto,
+    "brand": {
+      "@type": "Brand",
+      "name": "Your Brand Name"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": `https://yoursite.com/product/${this.seo.slug}`,
+      "priceCurrency": "USD",
+      "price": this.basePrice,
+      "availability": this.inventory.length > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+    }
+  };
+};
 
 export const Product = mongoose.model<IProductDocument>('Product', productSchema);
