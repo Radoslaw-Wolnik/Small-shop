@@ -76,4 +76,5 @@ const orderSchema = new Schema<IOrderDocument>({
   customerEmail: String,
 }, { timestamps: true });
 
-export const Order = mongoose.model<IOrderDocument>('Order', orderSchema);
+const Order = mongoose.model<IOrderDocument>('Order', orderSchema);
+export default Order;

@@ -21,4 +21,5 @@ const disputeSchema = new Schema<IDisputeDocument>({
   resolution: String,
 }, { timestamps: true });
 
-export const Dispute = mongoose.model<IDisputeDocument>('Dispute', disputeSchema);
+const Dispute = mongoose.model<IDisputeDocument>('Dispute', disputeSchema);
+export default Dispute;

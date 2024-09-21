@@ -47,4 +47,5 @@ messageSchema.pre('validate', function(next) {
 // Index for efficient querying
 messageSchema.index({ isAnonymous: 1, sender: 1, customerEmail: 1 });
 
-export const Message = mongoose.model<IMessageDocument>('Message', messageSchema);
+const Message = mongoose.model<IMessageDocument>('Message', messageSchema);
+export default Message;

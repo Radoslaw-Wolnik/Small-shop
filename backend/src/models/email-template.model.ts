@@ -14,4 +14,5 @@ const emailTemplateSchema = new Schema<IEmailTemplateDocument>({
   variables: [{ type: String }],
 });
 
-export const EmailTemplate = mongoose.model<IEmailTemplateDocument>('EmailTemplate', emailTemplateSchema);
+const EmailTemplate = mongoose.model<IEmailTemplateDocument>('EmailTemplate', emailTemplateSchema);
+export default EmailTemplate; 
