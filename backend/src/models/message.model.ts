@@ -9,6 +9,7 @@ export interface IMessageDocument extends Document {
   category: 'dispute' | 'contact' | 'other';
   relatedOrder?: Schema.Types.ObjectId;
   relatedDispute?: Schema.Types.ObjectId;
+  isAnonymous: boolean;
   createdAt: Date;
 }
 
@@ -28,15 +29,22 @@ const messageSchema = new Schema<IMessageDocument>({
   category: { type: String, enum: ['dispute', 'contact', 'other'], required: true },
   relatedOrder: { type: Schema.Types.ObjectId, ref: 'Order' },
   relatedDispute: { type: Schema.Types.ObjectId, ref: 'Dispute' },
+  isAnonymous: { type: Boolean, required: true },
 }, { timestamps: true });
 
-// Custom validator to ensure either sender or customerEmail is provided
+
+// Custom validator to ensure data integrity
 messageSchema.pre('validate', function(next) {
-  if (!this.sender && !this.customerEmail) {
-    next(new Error('Either sender or customerEmail must be provided'));
+  if (this.isAnonymous && !this.customerEmail) {
+    next(new Error('Customer email is required for anonymous messages'));
+  } else if (!this.isAnonymous && !this.sender) {
+    next(new Error('Sender is required for non-anonymous messages'));
   } else {
     next();
   }
 });
+
+// Index for efficient querying
+messageSchema.index({ isAnonymous: 1, sender: 1, customerEmail: 1 });
 
 export const Message = mongoose.model<IMessageDocument>('Message', messageSchema);
