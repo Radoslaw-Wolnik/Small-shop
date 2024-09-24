@@ -6,10 +6,10 @@ import { CustomError, ShippingError } from '../../utils/custom-errors.util';
 import environment from '../../config/environment';
 
 // You would typically get these from your Amazon Seller Central account
-const AMAZON_API_URL = environment.shipping.amazonApiUrl;
-const AMAZON_SELLER_ID = environment.shipping.amazonSellerId;
-const AMAZON_ACCESS_KEY = environment.shipping.amazonAccessKey;
-const AMAZON_SECRET_KEY = environment.shipping.amazonSecretKey;
+const AMAZON_API_URL = environment.shipment.amazonApiUrl;
+const AMAZON_SELLER_ID = environment.shipment.amazonSellerId;
+const AMAZON_ACCESS_KEY = environment.shipment.amazonAccessKey;
+const AMAZON_SECRET_KEY = environment.shipment.amazonSecretKey;
 
 export async function generateAmazonLabel(order: IOrderDocument): Promise<{ url: string; trackingNumber: string }> {
   try {
@@ -18,7 +18,7 @@ export async function generateAmazonLabel(order: IOrderDocument): Promise<{ url:
     const response = await axios.post(`${AMAZON_API_URL}/shipping/v1/shipments`, {
       sellerId: AMAZON_SELLER_ID,
       shipmentRequestDetails: {
-        amazon_order_id: order._id.toString(),
+        amazon_order_id: order.id.toString(),
         item_list: order.products.map(product => ({
           orderItemId: product.product.toString(),
           quantity: product.quantity
