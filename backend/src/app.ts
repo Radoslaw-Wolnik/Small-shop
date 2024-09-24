@@ -4,11 +4,14 @@ import environment from './config/environment';
 import logger from './utils/logger.util';
 
 import userRoutes from './routes/user.routes';
-import audioRoutes from './routes/audio.routes';
-import iconRoutes from './routes/icon.routes';
 import authRoutes from './routes/auth.routes';
 import adminRoutes from './routes/admin.routes';
-import collectionRoutes from './routes/collection.routes'
+import productRoutes from './routes/product.routes';
+import variantRoutes from './routes/variant.routes';
+import categoryRoutes from './routes/category.routes';
+import productTemplateRoutes from './routes/product-template.routes';
+import paymentRoutes from './routes/payment.routes';
+import shippingRoutes from './routes/shipment.routes';
 
 import { errorHandler } from './middleware/error.middleware';
 import { addRequestId } from './middleware/request-id.middleware';
@@ -50,11 +53,15 @@ if (environment.app.nodeEnv === 'development') {
 }
 
 app.use('/api/users', userRoutes);
-app.use('/api/audio', audioRoutes);
-app.use('/api/icon', iconRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/collection', collectionRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/variants', variantRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/product-templates', productTemplateRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/shipping', shippingRoutes);
+
 
 // Catch-all route for undefined endpoints
 app.use((req: Request, res: Response) => {
