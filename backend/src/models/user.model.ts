@@ -27,6 +27,8 @@ export interface IUserDocument extends Document {
     orderupdates: boolean;
   };
   isMagicLinkUser: boolean;
+  lastTimeActive: Date;
+  deactivated?: Date; // idk if its better to put it here or to make sepret schema with deactivated users - to be deleted in a week time
   getDecryptedEmail(): Promise<string>;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -85,6 +87,7 @@ const userSchema = new mongoose.Schema<IUserDocument, IUserModel>({
     orderUpdates: { type: Boolean, default: true },
   },
   isMagicLinkUser: { type: Boolean, default: false },
+  lastTimeActive: Date,
 },
   { timestamps: true }
 );
