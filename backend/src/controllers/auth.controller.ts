@@ -381,3 +381,42 @@ export const resetPassword = async (req: ResetPasswordRequest, res: Response, ne
     next(error instanceof CustomError ? error : new InternalServerError('Error resetting password'));
   }
 };
+
+
+interface CreateOwnerRequest extends AuthRequest {
+  body: {
+    username: string;
+    email: string;
+    password: string;
+  }
+}
+
+export const createOwner = async (req: CreateOwnerRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { username, email, password } = req.body;
+
+    if (!username || !email || !password) {
+      throw new BadRequestError('Username, email, and password are required');
+    }
+
+    const existingUser = await User.findByEmail(email);
+    if (existingUser) {
+      throw new ResourceExistsError('User already exists');
+    }
+
+    const newOwner = new User({
+      username,
+      email,
+      password,
+      role: 'owner',
+      isVerified: true // Owners are automatically verified
+    });
+
+    await newOwner.save();
+    logger.info('New owner account created', { createdBy: req.user?.id, newOwnerId: newOwner._id });
+
+    res.status(201).json({ message: 'Owner account created successfully', ownerId: newOwner._id });
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error creating owner account'));
+  }
+};
