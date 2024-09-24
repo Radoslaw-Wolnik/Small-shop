@@ -19,6 +19,8 @@ export interface IOrderDocument extends Document {
     zipCode: string;
   };
   shippingMethod: string;
+  shippingProvider?: string;
+  shippingLabel?: string;
   trackingNumber?: string;
   paymentMethod: string;
   paymentStatus: 'pending' | 'paid' | 'failed';
@@ -59,6 +61,8 @@ const orderSchema = new Schema<IOrderDocument>({
     zipCode: { type: String, required: true },
   },
   shippingMethod: { type: String, required: true },
+  shippingProvider: { type: String },
+  shippingLabel: { type: String },
   trackingNumber: String,
   paymentMethod: { type: String, required: true },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
