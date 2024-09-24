@@ -140,3 +140,17 @@ export class InsufficientStockError extends CustomError {
     super(`Insufficient stock for product: ${productName}`, 400);
   }
 }
+
+export class PaymentError extends CustomError {
+  constructor(message: string) {
+    super(message, 400);
+    this.name = 'PaymentError';
+  }
+}
+
+export class ShippingError extends CustomError {
+  constructor(message: string) {
+    super(message, 400);
+    this.name = 'ShippingError';
+  }
+}
