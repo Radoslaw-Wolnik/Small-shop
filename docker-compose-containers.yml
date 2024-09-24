@@ -96,6 +96,7 @@ services:
       - EMAIL_PASSWORD=${EMAIL_PASSWORD}
       - EMAIL_FROM=${EMAIL_FROM}
       - PAYMENT_WEBHOOK_SECRET=${PAYMENT_WEBHOOK_SECRET}
+      - MAX_PRODUCT_IMAGES=5
     volumes:
       - ./backend/src:/app/src:delegated
       - /app/node_modules
