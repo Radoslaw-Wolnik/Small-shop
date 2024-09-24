@@ -12,3 +12,13 @@
 - [ ] Added dispiute-order model and promotion-code model -> make controllers and routes 
 
 - [ ] Admin controleer -> del product (shouldnt it be in product controller), change email template (should i make seperate controller for that? and imort from there in adfmin routes)
+
+
+Suggestions to improve:
+ - Implement caching for frequently accessed data
+ - Add rate limiting to prevent API abuse ( this is by traefik so not really)
+ - Enhance the background job system for tasks like sending newsletters
+ - Implement full-text search functionality for products
+ - Consider adding analytics tracking for business insights
+ - Plan for internationalization if you're considering expanding to multiple languages/currencies
+ - the logging management tool ( for whole aplication )
