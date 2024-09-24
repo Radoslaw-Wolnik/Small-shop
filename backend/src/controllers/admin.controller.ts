@@ -117,3 +117,10 @@ export const deleteProduct = async (req: AuthRequest, res: Response, next: NextF
   }
 };
 
+export const updateSensitiveData = async(req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  // Implementation
+}
+
+export const deleteInactiveUsers = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  // Implementation
+}
