@@ -3,18 +3,15 @@ import { Request, Response, NextFunction } from 'express';
 import Category from '../models/category.model';
 import { CustomError, NotFoundError, InternalServerError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
-import slugify from 'slugify';
 
 export const createCategory = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { name, description, parent } = req.body;
-    const slug = slugify(name, { lower: true });
 
     const category = new Category({
       name,
       description,
-      parent,
-      slug
+      parent
     });
 
     await category.save();
@@ -39,10 +36,6 @@ export const updateCategory = async (req: AuthRequest, res: Response, next: Next
   try {
     const { id } = req.params;
     const updateData = req.body;
-
-    if (updateData.name) {
-      updateData.slug = slugify(updateData.name, { lower: true });
-    }
 
     const category = await Category.findByIdAndUpdate(id, updateData, { new: true, runValidators: true });
     if (!category) {

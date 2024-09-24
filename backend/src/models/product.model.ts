@@ -1,5 +1,6 @@
 // src/models/product.model.ts
 import mongoose, { Document, Schema } from 'mongoose';
+import slugify from 'slugify';
 
 // Updated Product Model
 export interface IProductDocument extends Document {
@@ -13,14 +14,16 @@ export interface IProductDocument extends Document {
     options: {
       name: string;
       price?: number;
-      photo?: string;
     }[];
   }[];
   defaultPhoto: string;
-  variantPhotos: {
-    variant: Schema.Types.ObjectId;
-    option: string;
-    photo: string;
+  images: {
+    url: string;
+    altText: string;
+    variantOption?: {
+      variant: Schema.Types.ObjectId;
+      option: string;
+    };
   }[];
   inventory: {
     variantCombination: string;
@@ -59,14 +62,16 @@ const productSchema = new Schema<IProductDocument>({
     options: [{
       name: { type: String, required: true },
       price: Number,
-      photo: String,
     }],
   }],
   defaultPhoto: { type: String, required: true },
-  variantPhotos: [{
-    variant: { type: Schema.Types.ObjectId, ref: 'Variant', required: true },
-    option: { type: String, required: true },
-    photo: { type: String, required: true },
+  images: [{
+    url: { type: String, required: true },
+    altText: { type: String, required: true },
+    variantOption: {
+      variant: { type: Schema.Types.ObjectId, ref: 'Variant' },
+      option: String,
+    },
   }],
   inventory: [{
     variantCombination: { type: String, required: true },
@@ -96,8 +101,8 @@ const productSchema = new Schema<IProductDocument>({
 
 // pre-save hook to generate the slug
 productSchema.pre('save', function(next) {
-  if (!this.seo.slug) {
-    this.seo.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  if (this.isModified('name')) {
+    this.seo.slug = slugify(this.name, { lower: true, strict: true });
   }
   next();
 });

@@ -1,5 +1,6 @@
 // src/models/category.model.ts
 import mongoose, { Document, Schema } from 'mongoose';
+import slugify from 'slugify';
 
 export interface ICategoryDocument extends Document {
   name: string;
@@ -28,8 +29,8 @@ const categorySchema = new Schema<ICategoryDocument>({
 
 // pre-save hook to generate the slug
 categorySchema.pre('save', function(next) {
-  if (!this.seo.slug) {
-    this.seo.slug = this.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  if (this.isModified('name')) {
+    this.seo.slug = slugify(this.name, { lower: true, strict: true });
   }
   next();
 });

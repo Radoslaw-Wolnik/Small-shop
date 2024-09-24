@@ -7,7 +7,6 @@ import Variant from '../models/variant.model';
 import User from '../models/user.model';
 import { CustomError, NotFoundError, InternalServerError, BadRequestError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
-import slugify from 'slugify';
 
 
 export const createProduct = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -83,67 +82,6 @@ export const updateVariantPhotos = async (req: AuthRequest, res: Response, next:
   }
 };
 
-export const createCategory = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { name, description, parent } = req.body;
-    const slug = slugify(name, { lower: true });
-
-    const category = new Category({
-      name,
-      description,
-      parent,
-      slug
-    });
-
-    await category.save();
-
-    logger.info('Category created', { categoryId: category._id, createdBy: req.user!.id });
-    res.status(201).json(category);
-  } catch (error) {
-    next(error instanceof CustomError ? error : new InternalServerError('Error creating category'));
-  }
-};
-
-export const createProductTemplate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { name, category, tags, variants, shippingDetails } = req.body;
-
-    const template = new ProductTemplate({
-      name,
-      category,
-      tags,
-      variants,
-      shippingDetails
-    });
-
-    await template.save();
-
-    logger.info('Product template created', { templateId: template._id, createdBy: req.user!.id });
-    res.status(201).json(template);
-  } catch (error) {
-    next(error instanceof CustomError ? error : new InternalServerError('Error creating product template'));
-  }
-};
-
-export const createVariant = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { name, changesPhoto, changesPrice, options } = req.body;
-
-    const variant = new Variant({
-      name,
-      changesPhoto,
-      changesPrice,
-      options
-    });
-
-    await variant.save();
-
-    logger.info('Variant created', { variantId: variant._id, createdBy: req.user!.id });
-    res.status(201).json(variant);
-  } catch (error) {
-    next(error instanceof CustomError ? error : new InternalServerError('Error creating variant'));
-  }
-};
 
 export const updateProduct = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
