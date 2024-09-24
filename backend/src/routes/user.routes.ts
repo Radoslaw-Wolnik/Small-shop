@@ -6,12 +6,21 @@ import { multerErrorHandler } from '../middleware/multer.middleware.js';
 
 const router: Router = express.Router();
 
-router.get('/me', authenticateJWT, getUserOwnProfile);
-router.put('/upload-profile-picture', authenticateJWT, multerErrorHandler(uploadProfilePicture), saveProfilePicture);
+// only for logged-in users
+router.use(authenticateJWT);
 
-router.put('/profile', authenticateJWT, updateProfile);
-router.post('/wishlist', authenticateJWT, addToWishlist);
-router.delete('/wishlist/:productId', authenticateJWT, removeFromWishlist);
+router.get('/me', getUserOwnProfile);
+router.put('/upload-profile-picture', multerErrorHandler(uploadProfilePicture), saveProfilePicture);
 
+router.put('/profile', updateProfile);
+router.post('/wishlist', addToWishlist);
+router.delete('/wishlist/:productId', removeFromWishlist);
+
+router.post('/shipping-info', ddShippingInfo);
+router.put('/shipping-info/:id', updateShippingInfo);
+
+router.delete('/me/:token', dactivateMyAccount)
+// im not sure if to generate token to make sure if user really wants to delete his profile or not
+// or better to deactivate and after a week the users profile will be deleted
 
 export default router;

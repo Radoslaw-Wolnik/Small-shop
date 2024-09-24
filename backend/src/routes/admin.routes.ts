@@ -7,7 +7,9 @@ import {
   deleteAdmin,
   addAdmin,
   updateEmailTemplate,
-  deleteProduct
+  deleteProduct,
+  deleteInactiveUsers,
+  updateSensitiveData
 } from '../controllers/admin.controller';
 
 const router: Router = express.Router();
@@ -23,5 +25,8 @@ router.post('/add', addAdmin);
 
 router.put('/email-template/:id', updateEmailTemplate);
 router.delete('/product/:id', deleteProduct);
+
+router.delete('/inactive-users', authenticateJWT, deleteInactiveUsers);
+router.put('/sensitive-data', authenticateJWT, updateSensitiveData);
 
 export default router;

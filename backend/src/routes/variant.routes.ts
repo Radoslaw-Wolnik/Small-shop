@@ -10,10 +10,14 @@ import {
 
 const router = express.Router();
 
-router.get('/', getVariants);
+router.get('/:id', getVariantDetails); // for product mby not here tbh idk if needed 
+
 router.use(authenticateJWT, isOwner);
+// create-update-delete
 router.post('/', createVariant);
 router.put('/:id', updateVariant);
 router.delete('/:id', deleteVariant);
+
+router.get('/', getVariants);
 
 export default router;

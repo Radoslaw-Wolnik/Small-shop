@@ -9,8 +9,10 @@ import {
 
 const router = express.Router();
 
-router.post('/generate-label', authenticateJWT, isOwner, generateShippingLabel);
+router.post('/generate-label/:orderId', authenticateJWT, isOwner, generateShippingLabel); // fix to use orderId
 router.get('/track/:orderId', authenticateJWT, trackShipment);
 router.put('/status/:orderId', authenticateJWT, isOwner, updateShippingStatus);
+
+router.get('/:trackingNumber', getShipmentTracking); // ? idk if its better then the track/:orderid or just idf tracking is outside our website
 
 export default router;

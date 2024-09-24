@@ -5,22 +5,30 @@ import { authenticateJWT, isOwner } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
-router.post('/', authenticateJWT, createOrder);
-router.get('/', authenticateJWT, isOwner, getOrders);
-router.get('/:id', authenticateJWT, getOrderById);
-router.put('/:id/status', authenticateJWT, isOwner, updateOrderStatus);
+// not logged in new order
+router.post('/anon/', createOrder);
+// token from email for not logged in
+router.get('/:orderId/:token', getOrderdetails);
+router.put('/cancel/:orderId/:token', cancelOrder);
+router.put('/received/:orderId/:token', authenticateJWT, markOrderAsReceived);
 
-// Route for creating a dispute by logged in user
-router.post('/dispute', authenticateJWT, createDispute);
-// Then i want route to create dispiute to specific order by not logged in user using magic ling 
-// (in link there will be a token or sth like that valid for 14days since recived)
-// or valid until server switches it to invalid (based on shipment status automaticly or sth like that)
-// router.post('/:orderID/:token/dispiute', createDispiute) or sth like that
 
-// Route for updating dispute status (owner only)
-router.put('/:orderId/dispute', authenticateJWT, isOwner, updateDisputeStatus);
+// Ensure all routes are protected and require user privileges
+router.use(authenticateJWT);
+router.post('/', createOrder);
+router.get('/:id', getOrderDetails);
+router.put('/:orderId/cancel', cancelOrder);
+router.put('/:orderId/received', markOrderAsReceived);
+router.get('/', getUserOrderHistory);
 
-// Route for generating shipping label (owner only)
-router.post('/:orderId/shipping-label', authenticateJWT, isOwner, generateShippingLabel);
+
+// Ensure all routes are protected and require owner privileges
+router.use(isOwner);
+router.get('/', getOrders);
+router.put('/:id/status', updateOrderStatus);
+router.put('/:orderId/deny', denyOrder);
+router.get('/statistics', getOrderStatistics);
+router.get('/search', searchOrders);
+
 
 export default router;

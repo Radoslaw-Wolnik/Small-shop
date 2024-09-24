@@ -18,18 +18,28 @@ const router = express.Router();
 
 // Public routes
 router.get('/', getProducts);
-router.get('/:id', getProductById);
+router.get('/tags', getProductsByTags);
+router.get('/category', getProductsByCategory);
+router.get('/category/tags', getProductsByTagsAndCategory);
+router.get('/:id', getProductDetails); // prev getProductById
 
 // Protected routes (owner only)
 router.use(authenticateJWT, isOwner);
+// create - update - delete
 router.post('/', createProduct);
 router.put('/:id', updateProduct);
 router.delete('/:id', deleteProduct);
 
+// variants
 router.post('/:productId/variants', addVariant);
 router.put('/:productId/inventory', updateInventory);
 router.put('/:productId/shipping', updateShippingDetails);
 router.put('/:productId/variant-photos', updateVariantPhotos);
+// photos
+router.post('/products/:productId/photos', upload.array('photos'), uploadProductPhotos);
 
+// tags
+router.post('/:productId/add', addTag);
+router.delete('/:productId/remove', removeTag);
 
 export default router;

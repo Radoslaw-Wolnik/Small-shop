@@ -14,4 +14,8 @@ router.post('/initialize', authenticateJWT, initializePayment);
 router.post('/callback/:gateway', verifyPaymentCallback, handlePaymentCallback);
 router.get('/status/:orderId', authenticateJWT, getPaymentStatus);
 
+// not logged in
+router.post('/process', processPayment); 
+router.get('/status/:orderId/:token', getPaymentStatus); // mby we will make token at beggining and then acces it? 
+
 export default router;

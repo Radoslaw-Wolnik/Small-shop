@@ -14,6 +14,7 @@ router.get('/', getCategories);
 
 // only for owner routes
 router.use(authenticateJWT, isOwner);
+// create-update-delete
 router.post('/', createCategory);
 router.put('/:id', updateCategory);
 router.delete('/:id', deleteCategory);
