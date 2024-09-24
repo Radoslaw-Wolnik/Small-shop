@@ -12,6 +12,9 @@
 - [ ] Added dispiute-order model and promotion-code model -> make controllers and routes 
 
 - [ ] Admin controleer -> del product (shouldnt it be in product controller), change email template (should i make seperate controller for that? and imort from there in adfmin routes)
+- [ ] Added last time active to user schema - make usage of it
+- [ ] mby this time the models will have its own doc
+- [ ] deactivated?: Date; // idk if its better to put it here or to make sepret schema with deactivated users - to be deleted in a week time or in User schema
 
 
 Suggestions to improve:
