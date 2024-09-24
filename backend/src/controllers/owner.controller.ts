@@ -8,6 +8,9 @@ import Category from '../models/category.model';
 import Product from '../models/product.model';
 import Order from '../models/order.model';
 
+import { integratePionerPolska, integrateDHL } from '../services/shipping.service'; // Assume these services are implemented
+
+
 
 export const createProductTemplate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -110,4 +113,89 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response, next: N
   }
 };
 
-// Add more owner-specific functions as needed
+export const createDispute = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { orderId, reason, description } = req.body;
+    const order = await Order.findById(orderId);
+    if (!order) {
+      throw new NotFoundError('Order');
+    }
+
+    // Check if the user is authorized to create a dispute for this order
+    if (req.user && order.user.toString() !== req.user.id) {
+      throw new UnauthorizedError('Not authorized to create a dispute for this order');
+    } else if (!req.user && order.customerEmail !== req.body.customerEmail) {
+      throw new UnauthorizedError('Email does not match the order');
+    }
+
+    order.status = 'disputed';
+    order.disputeDetails = { reason, description, status: 'open' };
+    await order.save();
+
+    // Create a new message for the dispute
+    const message = new Message({
+      sender: req.user ? req.user.id : undefined,
+      customerEmail: req.user ? undefined : req.body.customerEmail,
+      content: description,
+      category: 'dispute',
+      relatedOrder: orderId,
+      isAnonymous: !req.user
+    });
+    await message.save();
+
+    logger.info('Dispute created for order', { orderId, userId: req.user?.id });
+    res.status(201).json({ message: 'Dispute created successfully', order });
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error creating dispute'));
+  }
+};
+
+export const updateDisputeStatus = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { orderId } = req.params;
+    const { status, resolution } = req.body;
+    const order = await Order.findById(orderId);
+    if (!order || !order.disputeDetails) {
+      throw new NotFoundError('Order dispute');
+    }
+
+    order.disputeDetails.status = status;
+    order.disputeDetails.resolution = resolution;
+    await order.save();
+
+    logger.info('Dispute status updated', { orderId, status, updatedBy: req.user?.id });
+    res.json({ message: 'Dispute status updated successfully', order });
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error updating dispute status'));
+  }
+};
+
+export const generateShippingLabel = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { orderId } = req.params;
+    const { shippingMethod } = req.body;
+    const order = await Order.findById(orderId).populate('products.product');
+    if (!order) {
+      throw new NotFoundError('Order');
+    }
+
+    let shippingInfo;
+    if (shippingMethod === 'piotrPawelPolska') {
+      shippingInfo = await integratePionerPolska(order);
+    } else if (shippingMethod === 'dhl') {
+      shippingInfo = await integrateDHL(order);
+    } else {
+      throw new BadRequestError('Invalid shipping method');
+    }
+
+    order.trackingNumber = shippingInfo.trackingNumber;
+    order.shippingLabel = shippingInfo.labelUrl;
+    order.status = 'shipped';
+    await order.save();
+
+    logger.info('Shipping label generated', { orderId, shippingMethod, trackingNumber: shippingInfo.trackingNumber });
+    res.json({ message: 'Shipping label generated successfully', shippingInfo });
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error generating shipping label'));
+  }
+};

@@ -1,6 +1,6 @@
 // src/controllers/order.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import { Order } from '../models/order.model';
+import Order from '../models/order.model';
 import { NotFoundError, InternalServerError, CustomError } from '../utils/custom-errors.util';
 
 

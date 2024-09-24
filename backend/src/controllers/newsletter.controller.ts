@@ -6,6 +6,15 @@ import logger from '../utils/logger.util';
 import sendEmail from '../services/email.service';
 import User from '../models/user.model';
 
+export const getNewsletters = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const newsletters = await Newsletter.find();
+    res.json(newsletters);
+  } catch (error) {
+    next(new InternalServerError('Error fetching newsletters'));
+  }
+};
+
 export const createNewsletter = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { title, content, scheduledDate } = req.body;
@@ -23,17 +32,6 @@ export const createNewsletter = async (req: AuthRequest, res: Response, next: Ne
   }
 };
 
-
-export const getNewsletters = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const newsletters = await Newsletter.find();
-    res.json(newsletters);
-  } catch (error) {
-    next(new InternalServerError('Error fetching newsletters'));
-  }
-};
-
-
 export const updateNewsletter = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
@@ -46,18 +44,6 @@ export const updateNewsletter = async (req: AuthRequest, res: Response, next: Ne
     res.json(newsletter);
   } catch (error) {
     next(error instanceof CustomError ? error : new InternalServerError('Error updating newsletter'));
-  }
-};
-
-export const deleteNewsletter = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const newsletter = await Newsletter.findByIdAndDelete(req.params.id);
-    if (!newsletter) {
-      throw new NotFoundError('Newsletter');
-    }
-    res.json({ message: 'Newsletter deleted successfully' });
-  } catch (error) {
-    next(error instanceof CustomError ? error : new InternalServerError('Error deleting newsletter'));
   }
 };
 
@@ -76,6 +62,20 @@ export const scheduleNewsletter = async (req: AuthRequest, res: Response, next: 
     next(error instanceof CustomError ? error : new InternalServerError('Error scheduling newsletter'));
   }
 };
+
+
+export const deleteNewsletter = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const newsletter = await Newsletter.findByIdAndDelete(req.params.id);
+    if (!newsletter) {
+      throw new NotFoundError('Newsletter');
+    }
+    res.json({ message: 'Newsletter deleted successfully' });
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error deleting newsletter'));
+  }
+};
+
 
 export const sendNewsletter = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
