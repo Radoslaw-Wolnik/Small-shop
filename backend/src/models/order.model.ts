@@ -23,6 +23,7 @@ export interface IOrderDocument extends Document {
   shippingLabel?: string;
   trackingNumber?: string;
   paymentMethod: string;
+  paymentGateway?: string;
   paymentStatus: 'pending' | 'paid' | 'failed';
   promoCodeUsed?: string;
   disputeDetails?: {
@@ -65,6 +66,7 @@ const orderSchema = new Schema<IOrderDocument>({
   shippingLabel: { type: String },
   trackingNumber: String,
   paymentMethod: { type: String, required: true },
+  paymentGateway: { type: String },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
   promoCodeUsed: String,
   disputeDetails: {
