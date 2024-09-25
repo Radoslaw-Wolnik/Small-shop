@@ -20,7 +20,7 @@ router.use(authenticateJWT, isAdmin);
 router.get('/admins', getAdmins);
 router.get('/users', getAllUsers);
 
-router.delete('/admin/:id', deleteAdmin);
+router.delete('/:id', deleteAdmin);
 router.post('/add', addAdmin);
 
 router.put('/email-template/:id', updateEmailTemplate);

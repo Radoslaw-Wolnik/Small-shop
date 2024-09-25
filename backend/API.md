@@ -46,7 +46,7 @@ Response:
 
 ### Delete Admin
 ```
-🔑 DELETE /api/admin/admin/:id
+🔑 DELETE /api/admin/:id
 Response: 
 ```
 
