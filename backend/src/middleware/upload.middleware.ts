@@ -30,3 +30,6 @@ export const uploadProductPhotos = (req: Request, res: Response, next: NextFunct
     }
   });
 };
+
+
+// add middleware to attach - upload things to messages and disputes

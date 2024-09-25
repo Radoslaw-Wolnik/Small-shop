@@ -6,6 +6,7 @@ import isEmail from 'validator/lib/isEmail';
 
 export interface IUserDocument extends Document {
   _id: Types.ObjectId;
+  isAnonymous: boolean;
   username: string;
   email: string;
   emailHash: string;
@@ -16,19 +17,22 @@ export interface IUserDocument extends Document {
   verificationTokenExpires?: Date;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
+  anonymousRegistrationToken: string;
+  anonymousRegistrationExpires: Date;
   role: 'client' | 'owner' | 'admin';
   createdAt: Date;
   updatedAt: Date;
   wishlist: Types.ObjectId[];
+  addresses: Types.ObjectId[];
   notificationPreferences: {
     email: boolean;
     //promotions: boolean;
     newsletters: boolean;
     orderupdates: boolean;
   };
-  isMagicLinkUser: boolean;
+  
   lastTimeActive: Date;
-  deactivated?: Date; // idk if its better to put it here or to make sepret schema with deactivated users - to be deleted in a week time
+  deactivated?: Date;
   getDecryptedEmail(): Promise<string>;
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
@@ -39,10 +43,11 @@ export interface IUserModel extends Model<IUserDocument> {
 }
 
 const userSchema = new mongoose.Schema<IUserDocument, IUserModel>({
+  isAnonymous: { type: Boolean, default: false },
   username: { 
     type: String, 
-    required: true, 
     unique: true,
+    sparse: true, // Allows null values and ensures uniqueness for non-null values
     trim: true,
     minlength: [3, 'Username must be at least 3 characters long'],
     maxlength: [30, 'Username cannot exceed 30 characters'],
@@ -60,7 +65,6 @@ const userSchema = new mongoose.Schema<IUserDocument, IUserModel>({
   emailHash: { type: String, index: true, unique: true }, // For faster lookups
   password: { 
     type: String, 
-    required: true,
     minlength: [8, 'Password must be at least 8 characters long']
    },
   profilePicture: { 
@@ -78,15 +82,19 @@ const userSchema = new mongoose.Schema<IUserDocument, IUserModel>({
   resetPasswordToken: { type: String },
   resetPasswordExpires: Date,
 
+  anonymousRegistrationToken: { type: String },
+  anonymousRegistrationExpires: Date,
+
   role: { type: String, enum: ['client', 'owner', 'admin'], default: 'client' },
   wishlist: [{ type: Types.ObjectId, ref: 'Product' }],
+  addresses: [{ type: Types.ObjectId, ref: 'Address' }],
   notificationPreferences: {
     email: { type: Boolean, default: true },
     //promotions: { type: Boolean, default: false },
     newsletters: { type: Boolean, default: false },
     orderUpdates: { type: Boolean, default: true },
   },
-  isMagicLinkUser: { type: Boolean, default: false },
+
   lastTimeActive: Date,
 },
   { timestamps: true }

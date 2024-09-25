@@ -12,10 +12,13 @@
 - [ ] Added dispiute-order model and promotion-code model -> make controllers and routes 
 
 - [ ] Admin controleer -> del product (shouldnt it be in product controller), change email template (should i make seperate controller for that? and imort from there in adfmin routes)
-- [ ] Added last time active to user schema - make usage of it
-- [ ] mby this time the models will have its own doc
-- [ ] deactivated?: Date; // idk if its better to put it here or to make sepret schema with deactivated users - to be deleted in a week time or in User schema
 
+- [ ] deactivated?: Date; // idk if its better to put it here or to make sepret schema with deactivated users - to be deleted in a week time or in User schema
+- [ ] Added last time active to user schema - make usage of it in login
+- [ ] // add middleware to attach - upload things to messages and disputes
+- [ ] Change register to also handle if the account is there but is anonymous (change things  and anon flag)
+- [ ] add registration from magic link
+- [ ] if not making order from logged in acc make magic link and new user anonymous acc
 
 Suggestions to improve:
  - Implement caching for frequently accessed data

@@ -8,6 +8,8 @@ export interface IDisputeDocument extends Document {
   description: string;
   status: 'open' | 'under review' | 'resolved';
   resolution?: string;
+  attachments: {url: string, fileType: string}[];
+  messages: Schema.Types.ObjectId[]
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,6 +21,11 @@ const disputeSchema = new Schema<IDisputeDocument>({
   description: { type: String, required: true },
   status: { type: String, enum: ['open', 'under review', 'resolved'], default: 'open' },
   resolution: String,
+  attachments: [{ 
+    url: String, 
+    fileType: String 
+  }],
+  messages: [{ type: Schema.Types.ObjectId, ref: 'Message' }]
 }, { timestamps: true });
 
 export default mongoose.model<IDisputeDocument>('Dispute', disputeSchema);

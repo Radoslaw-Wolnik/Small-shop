@@ -11,13 +11,7 @@ export interface IOrderDocument extends Document {
   }[];
   totalAmount: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'disputed';
-  shippingAddress: {
-    street: string;
-    city: string;
-    state: string;
-    country: string;
-    zipCode: string;
-  };
+  shippingAddress: Schema.Types.ObjectId;
   shippingMethod: string;
   shippingProvider?: string;
   shippingLabel?: string;
@@ -26,18 +20,13 @@ export interface IOrderDocument extends Document {
   paymentGateway?: string;
   paymentStatus: 'pending' | 'paid' | 'failed';
   promoCodeUsed?: string;
-  disputeDetails?: {
-    reason: string;
-    description: string;
-    status: 'open' | 'under review' | 'resolved';
-    resolution?: string;
-  };
+  disputeId?: Schema.Types.ObjectId;
+
   createdAt: Date;
   updatedAt: Date;
 
-  magicLink?: string;
-  magicLinkExpires?: Date;
-  customerEmail?: string; // For non-logged in users
+  anonToken?: string;
+  anonTokenExpires?: Date;
 }
 
 const orderSchema = new Schema<IOrderDocument>({
@@ -54,13 +43,7 @@ const orderSchema = new Schema<IOrderDocument>({
     enum: ['pending', 'processing', 'shipped', 'delivered', 'completed', 'cancelled', 'disputed'], 
     default: 'pending' 
   },
-  shippingAddress: {
-    street: { type: String, required: true },
-    city: { type: String, required: true },
-    state: { type: String, required: true },
-    country: { type: String, required: true },
-    zipCode: { type: String, required: true },
-  },
+  shippingAddress: { type: Schema.Types.ObjectId, ref: 'Address', required: true },
   shippingMethod: { type: String, required: true },
   shippingProvider: { type: String },
   shippingLabel: { type: String },
@@ -69,17 +52,12 @@ const orderSchema = new Schema<IOrderDocument>({
   paymentGateway: { type: String },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
   promoCodeUsed: String,
-  disputeDetails: {
-    reason: String,
-    description: String,
-    status: { type: String, enum: ['open', 'under review', 'resolved'] },
-    resolution: String,
-  },
+  disputeId: { type: Schema.Types.ObjectId, ref: 'Dispute' },
 
   // for not logged in users
-  magicLink: String,
-  magicLinkExpires: Date,
-  customerEmail: String,
+  anonToken: String,
+  anonTokenExpires: Date,
+  
 }, { timestamps: true });
 
 export default mongoose.model<IOrderDocument>('Order', orderSchema);
