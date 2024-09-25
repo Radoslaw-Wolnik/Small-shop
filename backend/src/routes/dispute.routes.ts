@@ -11,7 +11,14 @@
 // dispute.routes.ts
 import express from 'express';
 import { authenticateJWT, isOwner } from '../middleware/auth.middleware';
-
+import {
+    createDisputeWithToken,
+    getDisputeDetails,
+    listDisputes,
+    createDispute,
+    updateDisputeStatus,
+    deleteDispute
+  } from '../controllers/dispute.controller';
 
 const router = express.Router();
 
