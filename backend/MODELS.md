@@ -4,8 +4,6 @@ This document provides an overview of the Mongoose models used in our applicatio
 
 ## Table of Contents
 
-## Table of Contents
-
 1. [PromotionCode](#promotioncode)
 2. [RevokedToken](#revokedtoken)
 3. [SiteSettings](#sitesettings)
@@ -24,7 +22,7 @@ This document provides an overview of the Mongoose models used in our applicatio
 
 The `PromotionCode` model represents promotional codes used for discounts in the application.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -39,7 +37,7 @@ The `PromotionCode` model represents promotional codes used for discounts in the
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `code`: A unique string representing the promotion code.
 - `discountType`: The type of discount, either 'percentage' or 'fixed' amount.
@@ -54,7 +52,7 @@ The `PromotionCode` model represents promotional codes used for discounts in the
 
 The `RevokedToken` model is used to keep track of revoked authentication tokens, typically used for logout functionality or security purposes.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -63,7 +61,7 @@ The `RevokedToken` model is used to keep track of revoked authentication tokens,
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `token`: The unique identifier of the revoked token.
 - `expiresAt`: The date and time when the token expires and can be removed from the database.
@@ -72,7 +70,7 @@ The `RevokedToken` model is used to keep track of revoked authentication tokens,
 
 The `SiteSettings` model stores global SEO and site configuration settings.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -88,7 +86,7 @@ The `SiteSettings` model stores global SEO and site configuration settings.
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `siteName`: The name of the website.
 - `siteDescription`: A brief description of the website for SEO purposes.
@@ -100,7 +98,7 @@ The `SiteSettings` model stores global SEO and site configuration settings.
 
 The `User` model represents user accounts in the application, with advanced features like email encryption and password hashing.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -152,7 +150,7 @@ The `User` model represents user accounts in the application, with advanced feat
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `username`: The user's unique username with validation rules.
 - `email`: The user's email address (stored encrypted).
@@ -168,16 +166,16 @@ The `User` model represents user accounts in the application, with advanced feat
 - `isMagicLinkUser`: Indicates if the user uses magic link authentication.
 - `lastTimeActive`: Timestamp of the user's last activity.
 
-### Methods
+#### Methods
 
 - `getDecryptedEmail()`: Returns the decrypted email of the user.
 - `comparePassword(candidatePassword)`: Compares a given password with the user's hashed password.
 
-### Static Methods
+#### Static Methods
 
 - `findByEmail(email)`: Finds a user by their email address.
 
-### Middleware
+#### Middleware
 
 - Pre-save hook: Hashes the password and encrypts the email before saving.
 
@@ -185,7 +183,7 @@ The `User` model represents user accounts in the application, with advanced feat
 
 The `Variant` model represents product variants, such as size or color options.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -196,7 +194,7 @@ The `Variant` model represents product variants, such as size or color options.
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `name`: The name of the variant (e.g., "Size", "Color").
 - `changesPhoto`: Indicates if this variant requires different product photos.
@@ -208,7 +206,7 @@ The `Variant` model represents product variants, such as size or color options.
 
 The `Message` model represents communication messages within the application, which can be related to disputes, contact inquiries, or other categories.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -231,7 +229,7 @@ The `Message` model represents communication messages within the application, wh
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `sender`: Reference to the User who sent the message (required for non-anonymous messages).
 - `customerEmail`: Email of the customer (required for anonymous messages).
@@ -242,11 +240,11 @@ The `Message` model represents communication messages within the application, wh
 - `relatedDispute`: Reference to a Dispute if the message is related to one.
 - `isAnonymous`: Indicates if the message was sent anonymously.
 
-### Middleware
+#### Middleware
 
 - Pre-validate hook: Ensures data integrity by checking that anonymous messages have a customer email and non-anonymous messages have a sender.
 
-### Indexing
+#### Indexing
 
 An index is created on `{ isAnonymous: 1, sender: 1, customerEmail: 1 }` for efficient querying.
 
@@ -254,7 +252,7 @@ An index is created on `{ isAnonymous: 1, sender: 1, customerEmail: 1 }` for eff
 
 The `Newsletter` model represents newsletter campaigns that can be sent to users.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -268,7 +266,7 @@ The `Newsletter` model represents newsletter campaigns that can be sent to users
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `title`: The title of the newsletter.
 - `content`: The main content of the newsletter.
@@ -282,7 +280,7 @@ The `Newsletter` model represents newsletter campaigns that can be sent to users
 
 The `Order` model represents customer orders in the e-commerce system.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -326,7 +324,7 @@ The `Order` model represents customer orders in the e-commerce system.
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `user`: Reference to the User who placed the order.
 - `products`: An array of ordered products, including quantity, selected variants, and price.
@@ -343,7 +341,7 @@ The `Order` model represents customer orders in the e-commerce system.
 
 The `Product` model represents products available in the e-commerce system.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -395,7 +393,7 @@ The `Product` model represents products available in the e-commerce system.
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `name`, `description`: Basic product information.
 - `category`: Reference to the product's category.
@@ -409,11 +407,11 @@ The `Product` model represents products available in the e-commerce system.
 - `seo`: SEO-related information, including a unique slug.
 - `isActive`: Indicates if the product is currently active.
 
-### Middleware
+#### Middleware
 
 - Pre-save hook: Generates the SEO slug based on the product name.
 
-### Methods
+#### Methods
 
 - `getStructuredData()`: Generates schema.org structured data for the product.
 
@@ -421,7 +419,7 @@ The `Product` model represents products available in the e-commerce system.
 
 The `ProductTemplate` model represents templates for creating new products with predefined attributes.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -440,7 +438,7 @@ The `ProductTemplate` model represents templates for creating new products with 
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `name`: The name of the product template.
 - `category`: Reference to the default category for products created from this template.
@@ -455,7 +453,7 @@ This template can be used to quickly create new products with predefined attribu
 
 The `Category` model represents product categories in the e-commerce system, allowing for hierarchical organization of products.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -471,7 +469,7 @@ The `Category` model represents product categories in the e-commerce system, all
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `name`: The unique name of the category.
 - `description`: An optional description of the category.
@@ -482,7 +480,7 @@ The `Category` model represents product categories in the e-commerce system, all
   - `keywords`: An array of SEO keywords.
   - `slug`: A unique, URL-friendly version of the category name.
 
-### Middleware
+#### Middleware
 
 - Pre-save hook: Automatically generates the SEO slug based on the category name.
 
@@ -490,7 +488,7 @@ The `Category` model represents product categories in the e-commerce system, all
 
 The `Dispute` model represents customer disputes related to orders in the e-commerce system.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -503,7 +501,7 @@ The `Dispute` model represents customer disputes related to orders in the e-comm
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `order`: A reference to the Order that is being disputed.
 - `user`: A reference to the User who opened the dispute.
@@ -518,7 +516,7 @@ The schema includes timestamps to track when the dispute was created and last up
 
 The `EmailTemplate` model represents reusable email templates for various system communications.
 
-### Schema
+#### Schema
 
 ```typescript
 {
@@ -529,7 +527,7 @@ The `EmailTemplate` model represents reusable email templates for various system
 }
 ```
 
-### Fields Explanation
+#### Fields Explanation
 
 - `name`: A unique name for the email template.
 - `subject`: The subject line of the email.
