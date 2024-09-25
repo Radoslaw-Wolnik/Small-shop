@@ -4,10 +4,10 @@ import { getBasicHealth, getDetailedHealth } from '../controllers/health.control
 const router = express.Router();
 
 // Basic health check route
-router.get('/health', getBasicHealth);
+router.get('/basic', getBasicHealth);
 
 // Detailed health check route
-router.get('/health/details', getDetailedHealth);
+router.get('/details', getDetailedHealth);
 
 export default router;
 
