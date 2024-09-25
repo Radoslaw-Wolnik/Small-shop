@@ -2,6 +2,7 @@
 import express from 'express';
 import { authenticateJWT, isOwner } from '../middleware/auth.middleware';
 import {
+  getVariantDetails,
   createVariant,
   getVariants,
   updateVariant,

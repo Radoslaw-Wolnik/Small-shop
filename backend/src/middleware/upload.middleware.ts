@@ -12,7 +12,7 @@ export const uploadProfilePicture = (req: Request, res: Response, next: NextFunc
   });
 };
 
-export const uploadProductPictures = (req: Request, res: Response, next: NextFunction) => {
+export const uploadProductPhotos = (req: Request, res: Response, next: NextFunction) => {
   upload.array('productPictures', environment.product.maxPictures)(req, res, (err) => {
     if (err) {
       handleMulterError(err, req, res, next);

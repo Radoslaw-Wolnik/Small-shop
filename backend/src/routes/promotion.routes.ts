@@ -1,6 +1,11 @@
 import express from 'express';
 import { authenticateJWT, isOwner } from '../middleware/auth.middleware';
-
+import {
+    createPromotion,
+    updatePromotion,
+    deletePromotion,
+    listPromotions
+  } from '../controllers/promotion.controller';
 
 const router = express.Router();
 

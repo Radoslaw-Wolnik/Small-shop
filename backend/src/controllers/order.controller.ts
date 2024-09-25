@@ -23,7 +23,7 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
   }
 };
 
-export const getOrderById = async (req: Request, res: Response, next: NextFunction) => {
+export const getOrderDetails = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const order = await Order.findById(req.params.id).populate('user').populate('items.product');
     if (!order) {

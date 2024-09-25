@@ -4,15 +4,20 @@ import { authenticateJWT, isOwner } from '../middleware/auth.middleware';
 import {
   generateShippingLabel,
   trackShipment,
-  updateShippingStatus
+  updateShippingStatus,
+  getShipmentTracking,
 } from '../controllers/shipment.controller';
 
 const router = express.Router();
 
-router.post('/generate-label/:orderId', authenticateJWT, isOwner, generateShippingLabel); // fix to use orderId
-router.get('/track/:orderId', authenticateJWT, trackShipment);
-router.put('/status/:orderId', authenticateJWT, isOwner, updateShippingStatus);
+router.get('/:token/:trackingNumber', getShipmentTracking);
 
-router.get('/:trackingNumber', getShipmentTracking); // ? idk if its better then the track/:orderid or just idf tracking is outside our website
+// Ensure all routes are protected and require login
+router.use(authenticateJWT);
+router.get('/track/:orderId', trackShipment);
+router.get('/:trackingNumber', getShipmentTracking);
+
+router.post('/generate-label/:orderId', isOwner, generateShippingLabel); // fix to use orderId
+router.put('/status/:orderId', isOwner, updateShippingStatus);
 
 export default router;

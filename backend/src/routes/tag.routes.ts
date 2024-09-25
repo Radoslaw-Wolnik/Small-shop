@@ -1,6 +1,11 @@
 import express from 'express';
 import { authenticateJWT, isOwner } from '../middleware/auth.middleware';
-
+import {
+    listTags,
+    createTag,
+    updateTag,
+    deleteTag
+  } from '../controllers/tag.controller';
 
 const router = express.Router();
 

@@ -219,7 +219,7 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
   }
 };
 
-export const getProductById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getProductdetails = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
     const product = await Product.findById(id)

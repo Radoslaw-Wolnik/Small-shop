@@ -6,13 +6,25 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+
   addVariant,
   updateInventory,
   updateShippingDetails,
+  
   getProducts,
-  getProductById,
+  getProductDetails,
+  getProductsByTags,
+  getProductsByCategory,
+  getProductsByTagsAndCategory,
+
+  addTag,
+  removeTag,
+
   updateVariantPhotos
+  saveProductPhotos
 } from '../controllers/product.controller';
+import { uploadProductPhotos, } from '../middleware/upload.middleware';
+import { multerErrorHandler } from '../middleware/multer.middleware';
 
 const router = express.Router();
 
@@ -34,9 +46,9 @@ router.delete('/:id', deleteProduct);
 router.post('/:productId/variants', addVariant);
 router.put('/:productId/inventory', updateInventory);
 router.put('/:productId/shipping', updateShippingDetails);
-router.put('/:productId/variant-photos', updateVariantPhotos);
+router.put('/:productId/variant-photos', updateVariantPhotos); // idk
 // photos
-router.post('/products/:productId/photos', upload.array('photos'), uploadProductPhotos);
+router.post('/products/:productId/photos', multerErrorHandler(uploadProductPhotos), saveProductPhotos);
 
 // tags
 router.post('/:productId/add', addTag);

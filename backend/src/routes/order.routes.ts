@@ -1,6 +1,17 @@
 // src/routes/order.routes.ts
 import express from 'express';
-import { createOrder, getOrders, getOrderById, updateOrderStatus } from '../controllers/order.controller';
+import { 
+  createOrder, 
+  getOrders, 
+  getOrderDetails, 
+  updateOrderStatus,
+  cancelOrder,
+  markOrderAsReceived,
+  getUserOrderHistory,
+  denyOrder,
+  getOrderStatistics,
+  searchOrders,
+ } from '../controllers/order.controller';
 import { authenticateJWT, isOwner } from '../middleware/auth.middleware';
 
 const router = express.Router();
@@ -8,7 +19,7 @@ const router = express.Router();
 // not logged in new order
 router.post('/anon/', createOrder);
 // token from email for not logged in
-router.get('/:orderId/:token', getOrderdetails);
+router.get('/:orderId/:token', getOrderDetails);
 router.put('/cancel/:orderId/:token', cancelOrder);
 router.put('/received/:orderId/:token', authenticateJWT, markOrderAsReceived);
 

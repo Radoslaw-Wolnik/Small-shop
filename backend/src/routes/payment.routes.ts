@@ -5,7 +5,8 @@ import { verifyPaymentCallback } from '../middleware/payment-security.middleware
 import {
   initializePayment,
   handlePaymentCallback,
-  getPaymentStatus
+  getPaymentStatus,
+  processPayment,
 } from '../controllers/payment.controller';
 
 const router = express.Router();
@@ -16,6 +17,6 @@ router.get('/status/:orderId', authenticateJWT, getPaymentStatus);
 
 // not logged in
 router.post('/process', processPayment); 
-router.get('/status/:orderId/:token', getPaymentStatus); // mby we will make token at beggining and then acces it? 
+router.get('/status/:orderId/:token', getPaymentStatus);
 
 export default router;

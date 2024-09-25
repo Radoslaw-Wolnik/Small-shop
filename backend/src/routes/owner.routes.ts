@@ -2,12 +2,7 @@
 import express from 'express';
 import { authenticateJWT, isOwner } from '../middleware/auth.middleware';
 import {
-  createProductTemplate,
-  createCategory,
-  addTag,
-  removeTag,
-  getOrders,
-  updateOrderStatus
+  
 } from '../controllers/owner.controller';
 
 const router = express.Router();

@@ -4,6 +4,7 @@ import { authenticateJWT, isOwner } from '../middleware/auth.middleware';
 import {
   createNewsletter,
   updateNewsletter,
+  deleteNewsletter,
   scheduleNewsletter,
   sendNewsletter,
   getSubscribers
