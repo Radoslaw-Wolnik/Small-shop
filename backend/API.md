@@ -32,25 +32,25 @@ Most endpoints require authentication. Authentication is handled using HTTP-only
 
 ## Admin Routes
 
-### Get All Admins
+#### Get All Admins
 ```
 🔑 GET /api/admin/admins
 Response: 
 ```
 
-### Get All Users
+#### Get All Users
 ```
 🔑 GET /api/admin/users
 Response: 
 ```
 
-### Delete Admin
+#### Delete Admin
 ```
 🔑 DELETE /api/admin/:id
 Response: 
 ```
 
-### Add Admin
+#### Add Admin
 ```
 🔑 POST /api/admin/add
 Body: {
@@ -59,7 +59,7 @@ Body: {
 Response: 
 ```
 
-### Update Email Template
+#### Update Email Template
 ```
 🔑 PUT /api/admin/email-template/:id
 Body: {
@@ -68,19 +68,19 @@ Body: {
 Response: 
 ```
 
-### Delete Product
+#### Delete Product
 ```
 🔑 DELETE /api/admin/product/:id
 Response: 
 ```
 
-### Delete Inactive Users
+#### Delete Inactive Users
 ```
 🔑 DELETE /api/admin/inactive-users
 Response: 
 ```
 
-### Update Sensitive Data
+#### Update Sensitive Data
 ```
 🔑 PUT /api/admin/sensitive-data
 Body: {
@@ -91,7 +91,7 @@ Response:
 
 ## Auth Routes
 
-### Register
+#### Register
 ```
 🔓 POST /api/auth/register
 Body: {
@@ -100,7 +100,7 @@ Body: {
 Response: 
 ```
 
-### Login
+#### Login
 ```
 🔓 POST /api/auth/login
 Body: {
@@ -109,7 +109,7 @@ Body: {
 Response: 
 ```
 
-### Post-Registration Login
+#### Post-Registration Login
 ```
 🔓 POST /api/auth/reg-login
 Body: {
@@ -118,31 +118,31 @@ Body: {
 Response: 
 ```
 
-### Logout
+#### Logout
 ```
 🔒 POST /api/auth/logout
 Response: 
 ```
 
-### Refresh Token
+#### Refresh Token
 ```
 🔒 POST /api/auth/refresh-token
 Response: 
 ```
 
-### Send Verification Email
+#### Send Verification Email
 ```
 🔒 POST /api/auth/send-verification
 Response: 
 ```
 
-### Verify Email
+#### Verify Email
 ```
 🔓 GET /api/auth/verify-email/:token
 Response: 
 ```
 
-### Change Password
+#### Change Password
 ```
 🔒 PUT /api/auth/change-password
 Body: {
@@ -151,7 +151,7 @@ Body: {
 Response: 
 ```
 
-### Request Password Reset
+#### Request Password Reset
 ```
 🔓 POST /api/auth/request-password-reset
 Body: {
@@ -160,7 +160,7 @@ Body: {
 Response: 
 ```
 
-### Reset Password
+#### Reset Password
 ```
 🔓 POST /api/auth/reset-password/:token
 Body: {
@@ -169,7 +169,7 @@ Body: {
 Response: 
 ```
 
-### Create Owner Account
+#### Create Owner Account
 ```
 🔑 POST /api/auth/create-owner
 Body: {
@@ -180,13 +180,13 @@ Response:
 
 ## Category Routes
 
-### Get Categories
+#### Get Categories
 ```
 🔓 GET /api/categories
 Response: 
 ```
 
-### Create Category
+#### Create Category
 ```
 👑 POST /api/categories
 Body: {
@@ -195,7 +195,7 @@ Body: {
 Response: 
 ```
 
-### Update Category
+#### Update Category
 ```
 👑 PUT /api/categories/:id
 Body: {
@@ -204,7 +204,7 @@ Body: {
 Response: 
 ```
 
-### Delete Category
+#### Delete Category
 ```
 👑 DELETE /api/categories/:id
 Response: 
@@ -212,19 +212,19 @@ Response:
 
 ## Dispute Routes
 
-### Get Dispute Details
+#### Get Dispute Details
 ```
 🔒 GET /api/disputes/:id
 Response: 
 ```
 
-### List Disputes
+#### List Disputes
 ```
 👑 GET /api/disputes
 Response: 
 ```
 
-### Create Dispute
+#### Create Dispute
 ```
 🔒 POST /api/disputes/:orderId
 Body: {
@@ -233,7 +233,7 @@ Body: {
 Response: 
 ```
 
-### Update Dispute Status
+#### Update Dispute Status
 ```
 👑 PUT /api/disputes/:id/status
 Body: {
@@ -242,7 +242,7 @@ Body: {
 Response: 
 ```
 
-### Delete Dispute
+#### Delete Dispute
 ```
 👑 DELETE /api/disputes/:id
 Response: 
@@ -250,13 +250,13 @@ Response:
 
 ## Health Routes
 
-### Basic Health Check
+#### Basic Health Check
 ```
-🔓 GET /api/health
+🔓 GET /api/health/basic
 Response: 
 ```
 
-### Detailed Health Check
+#### Detailed Health Check
 ```
 🔓 GET /api/health/details
 Response: 
@@ -264,7 +264,7 @@ Response:
 
 ## Message Routes
 
-### Create Message
+#### Create Message
 ```
 🔒 POST /api/messages
 Body: {
@@ -273,13 +273,13 @@ Body: {
 Response: 
 ```
 
-### Get Messages
+#### Get Messages
 ```
 👑 GET /api/messages
 Response: 
 ```
 
-### Mark Message as Read
+#### Mark Message as Read
 ```
 👑 PUT /api/messages/:id/read
 Response: 
@@ -287,7 +287,7 @@ Response:
 
 ## Newsletter Routes
 
-### Create Newsletter
+#### Create Newsletter
 ```
 👑 POST /api/newsletters
 Body: {
@@ -296,7 +296,7 @@ Body: {
 Response: 
 ```
 
-### Update Newsletter
+#### Update Newsletter
 ```
 👑 PUT /api/newsletters/:id
 Body: {
@@ -305,13 +305,13 @@ Body: {
 Response: 
 ```
 
-### Delete Newsletter
+#### Delete Newsletter
 ```
 👑 DELETE /api/newsletters/:id
 Response: 
 ```
 
-### Schedule Newsletter
+#### Schedule Newsletter
 ```
 👑 PUT /api/newsletters/:id/schedule
 Body: {
@@ -320,13 +320,13 @@ Body: {
 Response: 
 ```
 
-### Send Newsletter
+#### Send Newsletter
 ```
 👑 POST /api/newsletters/:id/send
 Response: 
 ```
 
-### Get Subscribers
+#### Get Subscribers
 ```
 👑 GET /api/newsletters/subscribers
 Response: 
@@ -334,7 +334,7 @@ Response:
 
 ## Order Routes
 
-### Create Anonymous Order
+#### Create Anonymous Order
 ```
 🔓 POST /api/orders/anon
 Body: {
@@ -343,25 +343,25 @@ Body: {
 Response: 
 ```
 
-### Get Order Details (Anonymous)
+#### Get Order Details (Anonymous)
 ```
 🎟️ GET /api/orders/:orderId/:token
 Response: 
 ```
 
-### Cancel Order (Anonymous)
+#### Cancel Order (Anonymous)
 ```
 🎟️ PUT /api/orders/cancel/:orderId/:token
 Response: 
 ```
 
-### Mark Order as Received (Anonymous)
+#### Mark Order as Received (Anonymous)
 ```
 🎟️ PUT /api/orders/received/:orderId/:token
 Response: 
 ```
 
-### Create Order (Authenticated)
+#### Create Order (Authenticated)
 ```
 🔒 POST /api/orders
 Body: {
@@ -370,37 +370,37 @@ Body: {
 Response: 
 ```
 
-### Get Order Details (Authenticated)
+#### Get Order Details (Authenticated)
 ```
 🔒 GET /api/orders/:id
 Response: 
 ```
 
-### Cancel Order (Authenticated)
+#### Cancel Order (Authenticated)
 ```
 🔒 PUT /api/orders/:orderId/cancel
 Response: 
 ```
 
-### Mark Order as Received (Authenticated)
+#### Mark Order as Received (Authenticated)
 ```
 🔒 PUT /api/orders/:orderId/received
 Response: 
 ```
 
-### Get User Order History
+#### Get User Order History
 ```
 🔒 GET /api/orders
 Response: 
 ```
 
-### Get All Orders (Owner)
+#### Get All Orders (Owner)
 ```
 👑 GET /api/orders
 Response: 
 ```
 
-### Update Order Status (Owner)
+#### Update Order Status (Owner)
 ```
 👑 PUT /api/orders/:id/status
 Body: {
@@ -409,7 +409,7 @@ Body: {
 Response: 
 ```
 
-### Deny Order (Owner)
+#### Deny Order (Owner)
 ```
 👑 PUT /api/orders/:orderId/deny
 Body: {
@@ -418,13 +418,13 @@ Body: {
 Response: 
 ```
 
-### Get Order Statistics (Owner)
+#### Get Order Statistics (Owner)
 ```
 👑 GET /api/orders/statistics
 Response: 
 ```
 
-### Search Orders (Owner)
+#### Search Orders (Owner)
 ```
 👑 GET /api/orders/search
 Query Parameters: {
@@ -435,7 +435,7 @@ Response:
 
 ## Payment Routes
 
-### Initialize Payment
+#### Initialize Payment
 ```
 🔒 POST /api/payments/initialize
 Body: {
@@ -444,7 +444,7 @@ Body: {
 Response: 
 ```
 
-### Handle Payment Callback
+#### Handle Payment Callback
 ```
 🔓 POST /api/payments/callback/:gateway
 Body: {
@@ -453,13 +453,13 @@ Body: {
 Response: 
 ```
 
-### Get Payment Status (Authenticated)
+#### Get Payment Status (Authenticated)
 ```
 🔒 GET /api/payments/status/:orderId
 Response: 
 ```
 
-### Process Payment (Anonymous)
+#### Process Payment (Anonymous)
 ```
 🔓 POST /api/payments/process
 Body: {
@@ -468,7 +468,7 @@ Body: {
 Response: 
 ```
 
-### Get Payment Status (Anonymous)
+#### Get Payment Status (Anonymous)
 ```
 🎟️ GET /api/payments/status/:orderId/:token
 Response: 
@@ -476,13 +476,13 @@ Response:
 
 ## Product Template Routes
 
-### Get Product Templates
+#### Get Product Templates
 ```
 🔓 GET /api/product-templates
 Response: 
 ```
 
-### Create Product Template
+#### Create Product Template
 ```
 👑 POST /api/product-templates
 Body: {
@@ -491,7 +491,7 @@ Body: {
 Response: 
 ```
 
-### Update Product Template
+#### Update Product Template
 ```
 👑 PUT /api/product-templates/:id
 Body: {
@@ -500,7 +500,7 @@ Body: {
 Response: 
 ```
 
-### Delete Product Template
+#### Delete Product Template
 ```
 👑 DELETE /api/product-templates/:id
 Response: 
@@ -508,13 +508,13 @@ Response:
 
 ## Product Routes
 
-### Get Products
+#### Get Products
 ```
 🔓 GET /api/products
 Response: 
 ```
 
-### Get Products by Tags
+#### Get Products by Tags
 ```
 🔓 GET /api/products/tags
 Query Parameters: {
@@ -523,7 +523,7 @@ Query Parameters: {
 Response: 
 ```
 
-### Get Products by Category
+#### Get Products by Category
 ```
 🔓 GET /api/products/category
 Query Parameters: {
@@ -532,7 +532,7 @@ Query Parameters: {
 Response: 
 ```
 
-### Get Products by Tags and Category
+#### Get Products by Tags and Category
 ```
 🔓 GET /api/products/category/tags
 Query Parameters: {
@@ -541,13 +541,13 @@ Query Parameters: {
 Response: 
 ```
 
-### Get Product Details
+#### Get Product Details
 ```
 🔓 GET /api/products/:id
 Response: 
 ```
 
-### Create Product
+#### Create Product
 ```
 👑 POST /api/products
 Body: {
@@ -556,7 +556,7 @@ Body: {
 Response: 
 ```
 
-### Update Product
+#### Update Product
 ```
 👑 PUT /api/products/:id
 Body: {
@@ -565,13 +565,13 @@ Body: {
 Response: 
 ```
 
-### Delete Product
+#### Delete Product
 ```
 👑 DELETE /api/products/:id
 Response: 
 ```
 
-### Add Variant
+#### Add Variant
 ```
 👑 POST /api/products/:productId/variants
 Body: {
@@ -580,7 +580,7 @@ Body: {
 Response: 
 ```
 
-### Update Inventory
+#### Update Inventory
 ```
 👑 PUT /api/products/:productId/inventory
 Body: {
@@ -589,7 +589,7 @@ Body: {
 Response: 
 ```
 
-### Update Shipping Details
+#### Update Shipping Details
 ```
 👑 PUT /api/products/:productId/shipping
 Body: {
@@ -598,7 +598,7 @@ Body: {
 Response: 
 ```
 
-### Update Variant Photos
+#### Update Variant Photos
 ```
 👑 PUT /api/products/:productId/variant-photos
 Body: {
@@ -607,14 +607,14 @@ Body: {
 Response: 
 ```
 
-### Upload Product Photos
+#### Upload Product Photos
 ```
 👑 POST /api/products/:productId/photos
 Body: FormData
 Response: 
 ```
 
-### Add Tag to Product
+#### Add Tag to Product
 ```
 👑 POST /api/products/:productId/add
 Body: {
@@ -623,7 +623,7 @@ Body: {
 Response: 
 ```
 
-### Remove Tag from Product
+#### Remove Tag from Product
 ```
 👑 DELETE /api/products/:productId/remove
 Body: {
@@ -634,7 +634,7 @@ Response:
 
 ## Promotion Routes
 
-### Create Promotion
+#### Create Promotion
 ```
 👑 POST /api/promotions
 Body: {
@@ -643,7 +643,7 @@ Body: {
 Response: 
 ```
 
-### Update Promotion
+#### Update Promotion
 ```
 👑 PUT /api/promotions/:id
 Body: {
@@ -652,13 +652,13 @@ Body: {
 Response: 
 ```
 
-### Delete Promotion
+#### Delete Promotion
 ```
 👑 DELETE /api/promotions/:id
 Response: 
 ```
 
-### List Promotions
+#### List Promotions
 ```
 👑 GET /api/promotions
 Response: 
@@ -666,7 +666,7 @@ Response:
 
 ## Shipping Routes
 
-### Generate Shipping Label
+#### Generate Shipping Label
 ```
 👑 POST /api/shipping/generate-label/:orderId
 Body: {
@@ -675,13 +675,13 @@ Body: {
 Response: 
 ```
 
-### Track Shipment
+#### Track Shipment
 ```
 🔒 GET /api/shipping/track/:orderId
 Response: 
 ```
 
-### Update Shipping Status
+#### Update Shipping Status
 ```
 👑 PUT /api/shipping/status/:orderId
 Body: {
@@ -690,7 +690,7 @@ Body: {
 Response: 
 ```
 
-### Get Shipment Tracking
+#### Get Shipment Tracking
 ```
 🔓 GET /api/shipping/:trackingNumber
 Response: 
@@ -698,13 +698,13 @@ Response:
 
 ## Tag Routes
 
-### List Tags
+#### List Tags
 ```
 🔓 GET /api/tags
 Response: 
 ```
 
-### Create Tag
+#### Create Tag
 ```
 👑 POST /api/tags
 Body: {
@@ -713,7 +713,7 @@ Body: {
 Response: 
 ```
 
-### Update Tag
+#### Update Tag
 ```
 👑 PUT /api/tags/:id
 Body: {
@@ -722,7 +722,7 @@ Body: {
 Response: 
 ```
 
-### Delete Tag
+#### Delete Tag
 ```
 👑 DELETE /api/tags/:id
 Response: 
@@ -730,20 +730,20 @@ Response:
 
 ## User Routes
 
-### Get User's Own Profile
+#### Get User's Own Profile
 ```
 🔒 GET /api/users/me
 Response: 
 ```
 
-### Upload Profile Picture
+#### Upload Profile Picture
 ```
 🔒 PUT /api/users/upload-profile-picture
 Body: FormData
 Response: 
 ```
 
-### Update Profile
+#### Update Profile
 ```
 🔒 PUT /api/users/profile
 Body: {
@@ -752,7 +752,7 @@ Body: {
 Response: 
 ```
 
-### Add to Wishlist
+#### Add to Wishlist
 ```
 🔒 POST /api/users/wishlist
 Body: {
@@ -761,13 +761,13 @@ Body: {
 Response: 
 ```
 
-### Remove from Wishlist
+#### Remove from Wishlist
 ```
 🔒 DELETE /api/users/wishlist/:productId
 Response: 
 ```
 
-### Add Shipping Info
+#### Add Shipping Info
 ```
 🔒 POST /api/users/shipping-info
 Body: {
@@ -776,7 +776,7 @@ Body: {
 Response: 
 ```
 
-### Update Shipping Info
+#### Update Shipping Info
 ```
 🔒 PUT /api/users/shipping-info/:id
 Body: {
@@ -785,7 +785,7 @@ Body: {
 Response: 
 ```
 
-### Deactivate User Profile
+#### Deactivate User Profile
 ```
 🎟️ DELETE /api/users/me/:token
 Response: 
@@ -793,13 +793,13 @@ Response:
 
 ## Variant Routes
 
-### Get Variant Details
+#### Get Variant Details
 ```
 🔓 GET /api/variants/:id
 Response: 
 ```
 
-### Create Variant
+#### Create Variant
 ```
 👑 POST /api/variants
 Body: {
@@ -808,7 +808,7 @@ Body: {
 Response: 
 ```
 
-### Update Variant
+#### Update Variant
 ```
 👑 PUT /api/variants/:id
 Body: {
@@ -817,13 +817,13 @@ Body: {
 Response: 
 ```
 
-### Delete Variant
+#### Delete Variant
 ```
 👑 DELETE /api/variants/:id
 Response: 
 ```
 
-### Get Variants
+#### Get Variants
 ```
 👑 GET /api/variants
 Response: 
