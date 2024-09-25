@@ -6,7 +6,9 @@ import {
   createProductTemplate,
   getProductTemplates,
   updateProductTemplate,
-  deleteProductTemplate
+  deleteProductTemplate,
+  getProductTemplateDetails,
+  useProductTemplate,
 } from '../controllers/product-template.controller';
 
 const router = express.Router();
@@ -20,5 +22,8 @@ router.get('/', getProductTemplates);
 router.post('/', createProductTemplate);
 router.put('/:id', updateProductTemplate);
 router.delete('/:id', deleteProductTemplate);
+
+router.get('/:id', getProductTemplateDetails);
+router.get('/use/:id', useProductTemplate);
 
 export default router;

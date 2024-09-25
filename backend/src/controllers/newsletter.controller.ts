@@ -18,13 +18,16 @@ export const getNewsletters = async (req: Request, res: Response, next: NextFunc
 export const createNewsletter = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { title, content, scheduledDate } = req.body;
+
     const newsletter = new Newsletter({
       title,
       content,
       scheduledDate,
       status: 'draft'
     });
+
     await newsletter.save();
+
     logger.info('Newsletter created', { newsletterId: newsletter._id, createdBy: req.user?.id });
     res.status(201).json(newsletter);
   } catch (error) {
@@ -36,30 +39,16 @@ export const updateNewsletter = async (req: AuthRequest, res: Response, next: Ne
   try {
     const { id } = req.params;
     const { title, content, scheduledDate } = req.body;
+
     const newsletter = await Newsletter.findByIdAndUpdate(id, { title, content, scheduledDate }, { new: true });
     if (!newsletter) {
       throw new NotFoundError('Newsletter');
     }
-    logger.info('Newsletter updated', { newsletterId: id, updatedBy: req.user?.id });
+
+    logger.info('Newsletter updated', { newsletterId: id, updatedBy: req.user!.id });
     res.json(newsletter);
   } catch (error) {
     next(error instanceof CustomError ? error : new InternalServerError('Error updating newsletter'));
-  }
-};
-
-
-export const scheduleNewsletter = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const { scheduledDate } = req.body;
-    const newsletter = await Newsletter.findByIdAndUpdate(id, { scheduledDate, status: 'scheduled' }, { new: true });
-    if (!newsletter) {
-      throw new NotFoundError('Newsletter');
-    }
-    logger.info('Newsletter scheduled', { newsletterId: id, scheduledDate, scheduledBy: req.user?.id });
-    res.json(newsletter);
-  } catch (error) {
-    next(error instanceof CustomError ? error : new InternalServerError('Error scheduling newsletter'));
   }
 };
 
@@ -70,16 +59,34 @@ export const deleteNewsletter = async (req: Request, res: Response, next: NextFu
     if (!newsletter) {
       throw new NotFoundError('Newsletter');
     }
-    res.json({ message: 'Newsletter deleted successfully' });
+    res.json({ message: 'Newsletter deleted successfully' }); // 204
   } catch (error) {
     next(error instanceof CustomError ? error : new InternalServerError('Error deleting newsletter'));
   }
 };
 
 
+export const scheduleNewsletter = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { scheduledDate } = req.body;
+
+    const newsletter = await Newsletter.findByIdAndUpdate(id, { scheduledDate, status: 'scheduled' }, { new: true });
+    if (!newsletter) {
+      throw new NotFoundError('Newsletter');
+    }
+
+    logger.info('Newsletter scheduled', { newsletterId: id, scheduledDate, scheduledBy: req.user?.id });
+    res.json(newsletter);
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error scheduling newsletter'));
+  }
+};
+
 export const sendNewsletter = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
+
     const newsletter = await Newsletter.findById(id);
     if (!newsletter) {
       throw new NotFoundError('Newsletter');
@@ -116,4 +123,3 @@ export const getSubscribers = async (req: AuthRequest, res: Response, next: Next
   }
 };
 
-// ... (you can add more functions as needed)

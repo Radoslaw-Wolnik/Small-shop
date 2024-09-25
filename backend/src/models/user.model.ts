@@ -17,13 +17,15 @@ export interface IUserDocument extends Document {
   verificationTokenExpires?: Date;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
-  anonymousRegistrationToken: string;
-  anonymousRegistrationExpires: Date;
+  oneTimeLoginToken?: string;
+  oneTimeLoginExpires?: Date;
+  deactivationToken?: string;
+  deactivationExpires?: Date;
   role: 'client' | 'owner' | 'admin';
   createdAt: Date;
   updatedAt: Date;
   wishlist: Types.ObjectId[];
-  addresses: Types.ObjectId[];
+  shippingAddresses: Types.ObjectId[];
   notificationPreferences: {
     email: boolean;
     //promotions: boolean;
@@ -82,12 +84,14 @@ const userSchema = new mongoose.Schema<IUserDocument, IUserModel>({
   resetPasswordToken: { type: String },
   resetPasswordExpires: Date,
 
-  anonymousRegistrationToken: { type: String },
-  anonymousRegistrationExpires: Date,
+  oneTimeLoginToken: { type: String },
+  oneTimeLoginExpires: Date,
+  deactivationToken: { type: String },
+  deactivationExpires: Date,
 
   role: { type: String, enum: ['client', 'owner', 'admin'], default: 'client' },
   wishlist: [{ type: Types.ObjectId, ref: 'Product' }],
-  addresses: [{ type: Types.ObjectId, ref: 'Address' }],
+  shippingAddresses: [{ type: Types.ObjectId, ref: 'Address' }],
   notificationPreferences: {
     email: { type: Boolean, default: true },
     //promotions: { type: Boolean, default: false },

@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import path from 'path';
 
 import User from '../models/user.model';
-import { ValidationError, UnauthorizedError, NotFoundError, UploadError, InternalServerError, CustomError } from '../utils/custom-errors.util';
+import { ValidationError, UnauthorizedError, NotFoundError, InternalServerError, CustomError } from '../utils/custom-errors.util';
 import { deleteFileFromStorage } from '../utils/delete-file.util';
 import logger from '../utils/logger.util';
 
@@ -77,44 +77,134 @@ export const getOtherUserProfile = async (req: Request, res: Response, next: Nex
 
 export const updateProfile = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const user = await User.findByIdAndUpdate(req.user!.id, req.body, { new: true }).select('-password');
-    if (!user) {
+    
+    if (!req.user) {
+      throw new UnauthorizedError('User not authenticated');
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.user.id, req.body, { new: true, runValidators: true }).select('-password');
+    if (!updatedUser) {
       throw new NotFoundError('User');
     }
-    res.json(user);
+
+    logger.info('User profile updated', { userId: req.user._id });
+    res.json(updatedUser);
   } catch (error) {
     next(error instanceof CustomError ? error : new InternalServerError('Error updating user profile'));
   }
 };
 
-export const addToWishlist = async (req: AuthRequest, res: Response, next: NextFunction) => {
+
+export const addToWishlist = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    if (!req.user) {
+      throw new UnauthorizedError('User not authenticated');
+    }
+
     const user = await User.findByIdAndUpdate(
-      req.user!.id,
+      req.user._id,
       { $addToSet: { wishlist: req.body.productId } },
       { new: true }
     ).select('-password');
+
     if (!user) {
       throw new NotFoundError('User');
     }
+
+    logger.info('Product added to wishlist', { userId: req.user._id, productId: req.body.productId });
     res.json(user);
   } catch (error) {
-    next(error instanceof CustomError ? error : new InternalServerError('Error adding product to wishlist'));
+    next(error);
   }
 };
 
-export const removeFromWishlist = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const removeFromWishlist = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
+    if (!req.user) {
+      throw new UnauthorizedError('User not authenticated');
+    }
+
     const user = await User.findByIdAndUpdate(
-      req.user!.id,
+      req.user._id,
       { $pull: { wishlist: req.params.productId } },
       { new: true }
     ).select('-password');
+
     if (!user) {
       throw new NotFoundError('User');
     }
+
+    logger.info('Product removed from wishlist', { userId: req.user._id, productId: req.params.productId });
     res.json(user);
   } catch (error) {
-    next(error instanceof CustomError ? error : new InternalServerError('Error removing product from wishlist'));
+    next(error);
+  }
+};
+
+export const addShippingInfo = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.user) {
+      throw new UnauthorizedError('User not authenticated');
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      throw new NotFoundError('User');
+    }
+
+    user.shippingAddresses.push(req.body);
+    await user.save();
+
+    logger.info('Shipping info added', { userId: req.user._id });
+    res.json(user.shippingAddresses);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateShippingInfo = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.user) {
+      throw new UnauthorizedError('User not authenticated');
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      throw new NotFoundError('User');
+    }
+
+    const addressIndex = user.shippingAddresses.findIndex(addr => addr._id.toString() === req.params.id);
+    if (addressIndex === -1) {
+      throw new NotFoundError('Shipping address');
+    }
+
+    user.shippingAddresses[addressIndex] = { ...user.shippingAddresses[addressIndex], ...req.body };
+    await user.save();
+
+    logger.info('Shipping info updated', { userId: req.user._id, addressId: req.params.id });
+    res.json(user.shippingAddresses[addressIndex]);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deactivateMyAccount = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.user) {
+      throw new UnauthorizedError('User not authenticated');
+    }
+    // one must first create deactivation token
+    const { token } = req.params;
+    if (token !== req.user.deactivationToken) {
+      throw new UnauthorizedError('Invalid deactivation token');
+    }
+
+    req.user.deactivated = new Date();
+    await req.user.save();
+
+    logger.warn('User account deactivated', { userId: req.user._id });
+    res.json({ message: 'Your account has been deactivated' });
+  } catch (error) {
+    next(error);
   }
 };

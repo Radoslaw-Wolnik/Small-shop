@@ -65,3 +65,44 @@ export const deleteProductTemplate = async (req: AuthRequest, res: Response, nex
     next(error instanceof CustomError ? error : new InternalServerError('Error deleting product template'));
   }
 };
+
+export const getProductTemplateDetails = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+
+    const { id } = req.params;
+    const template = await ProductTemplate.findById(id).populate('category').populate('variants');
+    if (!template) {
+      throw new NotFoundError('Product template');
+    }
+
+    res.json(template);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const useProductTemplate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+
+    const { id } = req.params;
+    const template = await ProductTemplate.findById(id);
+    if (!template) {
+      throw new NotFoundError('Product template');
+    }
+
+    // Here you would typically create a new product based on the template
+    // This is a simplified example
+    const newProduct = {
+      ...template.toObject(),
+      _id: undefined,
+      name: `${template.name} - Copy`,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    logger.info('Product created from template', { templateId: id, createdBy: req.user!.id });
+    res.status(201).json(newProduct);
+  } catch (error) {
+    next(error);
+  }
+};

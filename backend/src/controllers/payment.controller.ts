@@ -1,6 +1,6 @@
 // src/controllers/payment.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import { CustomError, NotFoundError, InternalServerError, BadRequestError } from '../utils/custom-errors.util';
+import { CustomError, NotFoundError, InternalServerError, BadRequestError, PaymentError, UnauthorizedError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 import Order from '../models/order.model';
 // Import payment gateway services (these would need to be implemented)
@@ -28,6 +28,8 @@ export const initializePayment = async (req: AuthRequest, res: Response, next: N
       case 'payu':
         paymentUrl = await initializePayUPayment(order);
         break;
+      case 'stripe':
+        // not yet implemented
       default:
         throw new BadRequestError('Invalid payment gateway');
     }
@@ -87,8 +89,40 @@ export const getPaymentStatus = async (req: AuthRequest, res: Response, next: Ne
       throw new NotFoundError('Order not found');
     }
 
+    if (req.user && order.user && order.user.toString() !== req.user._id.toString()) {
+      throw new UnauthorizedError('Not authorized to view this order');
+    }
+
     res.json({ paymentStatus: order.paymentStatus });
   } catch (error) {
-    next(error instanceof CustomError ? error : new InternalServerError('Error getting payment status'));
+    next(error);
+  }
+};
+
+export const processPayment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { orderId, paymentMethod, paymentDetails } = req.body;
+
+    const order = await Order.findById(orderId);
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    // Here you would typically integrate with a payment processor
+    // This is a simplified example
+    const paymentSuccessful = Math.random() > 0.1; // 90% success rate for demonstration
+
+    if (paymentSuccessful) {
+      order.paymentStatus = 'paid';
+      order.paymentMethod = paymentMethod;
+      await order.save();
+
+      logger.info('Payment processed successfully', { orderId, paymentMethod });
+      res.json({ message: 'Payment processed successfully' });
+    } else {
+      throw new PaymentError('Payment processing failed');
+    }
+  } catch (error) {
+    next(error);
   }
 };

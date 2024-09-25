@@ -106,3 +106,38 @@ export const updateShippingStatus = async (req: AuthRequest, res: Response, next
     next(error instanceof CustomError ? error : new InternalServerError('Error updating shipping status'));
   }
 };
+
+// tracking info for not logge din users (or just log in using the one time link to check im not sure whats the best aproach)
+export const TrackShippmentAnonymous = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { token, trackingNumber } = req.params;
+
+    const order = await Order.findOne({ trackingNumber, anonToken: token });
+    if (!order) {
+      throw new NotFoundError('Order not found or invalid token');
+    }
+    // do sth else if token expired
+
+    let trackingInfo;
+    switch (order.shippingProvider) {
+      case 'poczta-polska':
+        trackingInfo = await trackPocztaPolskaShipment(trackingNumber);
+        break;
+      case 'dhl':
+        trackingInfo = await trackDHLShipment(trackingNumber);
+        break;
+      case 'amazon':
+        trackingInfo = await trackAmazonShipment(trackingNumber);
+        break;
+      case 'paczkomaty':
+        trackingInfo = await trackPaczkomatyShipment(trackingNumber);
+        break;
+      default:
+        throw new BadRequestError('Invalid shipping provider');
+    }
+
+    res.json(trackingInfo);
+  } catch (error) {
+    next(error);
+  }
+};

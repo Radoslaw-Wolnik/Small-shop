@@ -1,15 +1,14 @@
 // src/controllers/authController.ts
 import { Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import RevokedToken from '../models/revoked-token.model';
 import User, { IUserDocument } from '../models/user.model';
+import RevokedToken from '../models/revoked-token.model';
+import AuthRequest from '../../types/global';
 import { generateToken, setTokenCookie, refreshToken as refreshAuthToken, generateShortLivedToken, setShortLivedTokenCookie } from '../middleware/auth.middleware';
 import environment from '../config/environment';
 import sendEmail from '../services/email.service';
-import AuthRequest from '../../types/global';
-import { MongoError } from 'mongodb';
+
 import { ValidationError, UnauthorizedError, NotFoundError, ConflictError, InternalServerError, AuthenticationError, CustomError, BadRequestError, ResourceExistsError, GoneError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 
@@ -54,6 +53,9 @@ export const login = async (req: LoginRequest, res: Response, next: NextFunction
     // Create and return JWT token
     const token = generateToken(user);
     setTokenCookie(res, token);
+
+    user.lastTimeActive = new Date();
+    await user.save();
 
     logger.info('User logged in successfully', { userId: user._id });
     res.json({ message: 'Login successful', user: { id: user._id, role: user.role } });
@@ -132,26 +134,20 @@ export const register = async (req: RegisterRequest, res: Response, next: NextFu
     }
 
     // Check if user already exists
-    const existingUser = await User.findByEmail(email);
-    if (existingUser) {
-      throw new ResourceExistsError('User already exists');
-    }
-
-    // Check if username is already taken
-    /* insted just try and if not possible send 409 error
-    user = await User.findOne({ username });
+    let user = await User.findByEmail(email);
     if (user) {
-      res.status(401).json({ message: 'Username already exists' });
-      return;
+      if (user.isAnonymous) {
+        // Update anonymous user
+        user.username = username;
+        user.password = password;
+        user.isAnonymous = false;
+      } else {
+        throw new BadRequestError('User already exists');
+      }
+    } else {
+      // Create new user
+      user = new User({ username, email, password });
     }
-    */
-
-    const user = new User({ 
-      username, 
-      email,  // Will be automatically encrypted when saved
-      password, // This will be hashed automatically before saving
-      role: 'user'
-    });
 
     // Create verification token
     const verificationToken = crypto.randomBytes(20).toString('hex');
@@ -186,15 +182,7 @@ export const register = async (req: RegisterRequest, res: Response, next: NextFu
       message: 'User registered. Please check your email to verify your account.'
     });
   } catch (error) {
-    if (error instanceof Error && (error as any).code === 11000) {
-      let field = 'field';
-      if ((error as any).keyPattern) {
-        field = Object.keys((error as any).keyPattern)[0];
-      }
-      next(new ResourceExistsError(`User with that ${field}`));
-    } else {
-      next(error instanceof CustomError ? error : new InternalServerError('Error registering user'));
-    }
+    next(error);
   }
 };
 
@@ -376,6 +364,7 @@ export const resetPassword = async (req: ResetPasswordRequest, res: Response, ne
     user.resetPasswordExpires = undefined;
     await user.save();
 
+    logger.info('Password reset successful', { userId: user._id });
     res.json({ message: 'Password reset successful' });
   } catch (error) {
     next(error instanceof CustomError ? error : new InternalServerError('Error resetting password'));
@@ -418,5 +407,70 @@ export const createOwner = async (req: CreateOwnerRequest, res: Response, next: 
     res.status(201).json({ message: 'Owner account created successfully', ownerId: newOwner._id });
   } catch (error) {
     next(error instanceof CustomError ? error : new InternalServerError('Error creating owner account'));
+  }
+};
+
+// one Time Log-in loginc
+export const createMagicLink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { email } = req.body;
+    let user = await User.findByEmail(email);
+
+    if (!user) {
+      // Create a new anonymous user
+      user = new User({ email, isAnonymous: true });
+      await user.save();
+    }
+
+    const Token = crypto.randomBytes(20).toString('hex');
+    user.oneTimeLoginToken = Token;
+    user.oneTimeLoginExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    await user.save();
+
+    const magicLink = `${environment.app.frontend}/magic-login/${Token}`;
+    await sendEmail({
+      to: email,
+      subject: 'Your Magic Login Link',
+      html: `
+        <h1>Magic Login Link</h1>
+        <p>Click the link below to log in:</p>
+        <a href="${magicLink}">${magicLink}</a>
+        <p>This link will expire in 15 minutes.</p>
+      `
+    });
+
+    logger.info('Magic link created for', { email });
+    res.json({ message: 'Magic link sent to your email' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
+export const loginWithMagicLink = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { token } = req.params;
+    const user = await User.findOne({
+      magicLinkToken: token,
+      magicLinkExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      throw new BadRequestError('Invalid or expired magic link');
+    }
+
+    user.oneTimeLoginToken = undefined;
+    user.oneTimeLoginExpires = undefined;
+    user.lastTimeActive = new Date();
+    await user.save();
+
+    const authToken = generateToken(user);
+    setTokenCookie(res, authToken);
+
+    logger.info('User logged in with magic link', { userId: user._id });
+    res.json({ message: 'Login successful', user: { id: user._id, role: user.role } });
+  } catch (error) {
+    next(error);
   }
 };

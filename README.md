@@ -12,15 +12,30 @@
 
  - [ ] Admin controleer -> del product (shouldnt it be in product controller), change email template (should i make seperate controller for that? and imort from there in adfmin routes)
 
- - [ ] deactivated?: Date; // idk if its better to put it here or to make sepret schema with deactivated users - to be deleted in a week time or in User schema
  - [ ] Added last time active to user schema - make usage of it in login
  - [ ] // add middleware to attach - upload things to messages and disputes
- - [ ] Change register to also handle if the account is there but is anonymous (change things  and anon flag)
- - [ ] add registration from magic link
- - [ ] if not making order from logged in acc make magic link and new user anonymous acc
- - [ ] for adress mby add, update, delete and its own router and controller? mby not mby just controller tfor easier management
+
 
  - [ ] update inventory logic and inventory management
+
+ - [ ] delete category only if there are no products in the category
+ - [ ] insted of this make a compare or sth in the schemas or sth better tbh this is embarassing 
+ const slug = slugify(name, { lower: true, strict: true });
+    const existingProduct = await Product.findOne({ 'seo.slug': slug });
+    if (existingProduct) {
+      throw new BadRequestError('A product with this name already exists');
+    }
+ - [ ] better update sensitive data ino admin controller 
+ - [ ] better email-template (categories or labels and also make usage of them across aplication)
+ - [ ] create deactivation account token request fro deactivationg account (in auth.controller) deactivate account 1. auth create deactivation token 2. user.deactivate my acc 
+ - [ ] order controller fix 
+ - [ ] whats going on with the process payment in payment controller ? Is it just unneded Also are the tokens used in verify payment
+ - [ ] in shipment controller the token expired error add at the last function
+ - [ ] idk if use product template is good in product template controller
+ - [ ] check promotion controller
+ - [ ] make tag model and properly use it and check the controller and routes
+ - [ ] variant controller - remove variant only if its not used, alsio in product make remove variant that also deletes the photos (mby not sure mby additional delete photo)
+ - [ ] make routes for siter settings
 
 Suggestions to improve:
  - Implement caching for frequently accessed data
