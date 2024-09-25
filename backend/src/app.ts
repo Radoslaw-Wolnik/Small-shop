@@ -3,15 +3,24 @@ import cors from 'cors';
 import environment from './config/environment';
 import logger from './utils/logger.util';
 
-import userRoutes from './routes/user.routes';
-import authRoutes from './routes/auth.routes';
+
 import adminRoutes from './routes/admin.routes';
-import productRoutes from './routes/product.routes';
-import variantRoutes from './routes/variant.routes';
+import authRoutes from './routes/auth.routes';
 import categoryRoutes from './routes/category.routes';
-import productTemplateRoutes from './routes/product-template.routes';
+import disputeRoutes from './routes/dispute.routes';
+import healthRoutes from './routes/health.routes';
+import messageRoutes from './routes/message.routes';
+import newsletterRoutes from './routes/newsletter.routes';
+import orderRoutes from './routes/order.routes';
+// import ownerRoutes from './routes/owner.routes';
 import paymentRoutes from './routes/payment.routes';
-import shippingRoutes from './routes/shipment.routes';
+import productTemplateRoutes from './routes/product-template.routes'
+import productRoutes from './routes/product.routes';
+import promotionRoutes from './routes/promotion.routes';
+import shipmentRoutes from './routes/shipment.routes';
+import tagRoutes from './routes/tag.routes';
+import userRoutes from './routes/user.routes';
+import variantRoutes from './routes/variant.routes';
 
 import { errorHandler } from './middleware/error.middleware';
 import { addRequestId } from './middleware/request-id.middleware';
@@ -52,16 +61,30 @@ if (environment.app.nodeEnv === 'development') {
   });
 }
 
-app.use('/api/users', userRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/variants', variantRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/product-templates', productTemplateRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/shipping', shippingRoutes);
+// Create a router to group all routes under /api
+const apiRouter = express.Router();
 
+// Register all routes with the apiRouter
+apiRouter.use('/admin', adminRoutes);
+apiRouter.use('/auth', authRoutes);
+apiRouter.use('/users', userRoutes);
+apiRouter.use('/products', productRoutes);
+apiRouter.use('/variants', variantRoutes);
+apiRouter.use('/categories', categoryRoutes);
+apiRouter.use('/product-templates', productTemplateRoutes);
+apiRouter.use('/payments', paymentRoutes);
+apiRouter.use('/shipping', shipmentRoutes);
+apiRouter.use('/disputes', disputeRoutes);
+apiRouter.use('/health', healthRoutes);
+apiRouter.use('/messages', messageRoutes);
+apiRouter.use('/newsletters', newsletterRoutes);
+apiRouter.use('/orders', orderRoutes);
+// apiRouter.use('/owners', ownerRoutes);
+apiRouter.use('/promotions', promotionRoutes);
+apiRouter.use('/tags', tagRoutes);
+
+// Mount the router on the /api path
+app.use('/api', apiRouter);
 
 // Catch-all route for undefined endpoints
 app.use((req: Request, res: Response) => {
