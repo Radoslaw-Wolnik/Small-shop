@@ -7,18 +7,20 @@
 - Anonymous : folks that buy without account or dispiute via magic link
 
 ## ToDo: 
-- [ ] Actual SEO things (product slug and category should be masde using npm slug) (and also global site-settings)
-- [ ] Api insted of placeholders in services (payment and shipment)
-- [ ] Added dispiute-order model and promotion-code model -> make controllers and routes 
+ - [ ] Actual SEO things (product slug and category should be masde using npm slug) (and also global site-settings)
+ - [ ] Api insted of placeholders in services (payment and shipment)
 
-- [ ] Admin controleer -> del product (shouldnt it be in product controller), change email template (should i make seperate controller for that? and imort from there in adfmin routes)
+ - [ ] Admin controleer -> del product (shouldnt it be in product controller), change email template (should i make seperate controller for that? and imort from there in adfmin routes)
 
-- [ ] deactivated?: Date; // idk if its better to put it here or to make sepret schema with deactivated users - to be deleted in a week time or in User schema
-- [ ] Added last time active to user schema - make usage of it in login
-- [ ] // add middleware to attach - upload things to messages and disputes
-- [ ] Change register to also handle if the account is there but is anonymous (change things  and anon flag)
-- [ ] add registration from magic link
-- [ ] if not making order from logged in acc make magic link and new user anonymous acc
+ - [ ] deactivated?: Date; // idk if its better to put it here or to make sepret schema with deactivated users - to be deleted in a week time or in User schema
+ - [ ] Added last time active to user schema - make usage of it in login
+ - [ ] // add middleware to attach - upload things to messages and disputes
+ - [ ] Change register to also handle if the account is there but is anonymous (change things  and anon flag)
+ - [ ] add registration from magic link
+ - [ ] if not making order from logged in acc make magic link and new user anonymous acc
+ - [ ] for adress mby add, update, delete and its own router and controller? mby not mby just controller tfor easier management
+
+ - [ ] update inventory logic and inventory management
 
 Suggestions to improve:
  - Implement caching for frequently accessed data
