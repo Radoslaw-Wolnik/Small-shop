@@ -35,3 +35,4 @@ router.post('/:orderId', createDispute);
 router.put('/:id/status', updateDisputeStatus);
 router.delete('/:id', deleteDispute); // can be automatic after its closed and some time passed
 
+export default router;
