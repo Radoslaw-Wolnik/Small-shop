@@ -3,168 +3,286 @@
 ## Table of Contents
 1. [Authentication](#authentication)
 2. [Admin Routes](#admin-routes)
-3. [Owner Routes](#owner-routes)
-4. [Newsletter Routes](#newsletter-routes)
-5. [Order Routes](#order-routes)
-6. [Product Routes](#product-routes)
-7. [Category Routes](#category-routes)
-8. [User Routes](#user-routes)
-9. [Variant Routes](#variant-routes)
-10. [Tag Routes](#tag-routes)
-11. [Dispute Routes](#dispute-routes)
+3. [Auth Routes](#auth-routes)
+4. [Category Routes](#category-routes)
+5. [Dispute Routes](#dispute-routes)
+6. [Health Routes](#health-routes)
+7. [Message Routes](#message-routes)
+8. [Newsletter Routes](#newsletter-routes)
+9. [Order Routes](#order-routes)
+10. [Payment Routes](#payment-routes)
+11. [Product Template Routes](#product-template-routes)
+12. [Product Routes](#product-routes)
+13. [Promotion Routes](#promotion-routes)
+14. [Shipping Routes](#shipping-routes)
+15. [Tag Routes](#tag-routes)
+16. [User Routes](#user-routes)
+17. [Variant Routes](#variant-routes)
 
 ## Authentication
 
 Most endpoints require authentication. Authentication is handled using HTTP-only cookies. When a user logs in successfully, the server will set a secure, HTTP-only cookie containing a session identifier. This cookie will be automatically included in subsequent requests to authenticated endpoints. Authentication requirement is indicated for each endpoint as follows:
  
  - 🔓 No authentication required
+ - 🎟️ Token (magic link) required
  - 🔒 User authentication required
- - 🎟️ Magic link (token) required
  - 👑 Owner authentication required
  - 🔑 Admin authentication required
 
+
 ## Admin Routes
 
-### Create Owner Account
+### Get All Admins
 ```
-🔑 POST /api/admin/create-owner
+🔑 GET /api/admin/admins
+Response: 
+```
+
+### Get All Users
+```
+🔑 GET /api/admin/users
+Response: 
+```
+
+### Delete Admin
+```
+🔑 DELETE /api/admin/admin/:id
+Response: 
+```
+
+### Add Admin
+```
+🔑 POST /api/admin/add
 Body: {
-  "username": string,
-  "email": string,
-  "password": string
+  // Add required fields
 }
+Response: 
+```
+
+### Update Email Template
+```
+🔑 PUT /api/admin/email-template/:id
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Delete Product
+```
+🔑 DELETE /api/admin/product/:id
+Response: 
 ```
 
 ### Delete Inactive Users
 ```
 🔑 DELETE /api/admin/inactive-users
-Query: {
-  "inactiveSince": Date // Optional, default might be 6 months
-}
-```
-
-### Delete Product
-```
-🔑 DELETE /api/admin/products/:productId
+Response: 
 ```
 
 ### Update Sensitive Data
 ```
 🔑 PUT /api/admin/sensitive-data
 Body: {
-  "shipmentFromAddress": string,
-  "apiKeys": {
-    "shipment": string,
-    "payment": string
-  },
-  "shipmentPasswords": {
-    "dhl": string,
-    "fedex": string
-  }
+  // Add required fields
 }
+Response: 
 ```
 
-## Owner Routes
+## Auth Routes
 
-### Create Product
+### Register
 ```
-👑 POST /api/owner/products
+🔓 POST /api/auth/register
 Body: {
-  "name": string,
-  "description": string,
-  "price": number,
-  "category": string,
-  "tags": string[],
-  "variants": [
-    {
-      "name": string,
-      "options": string[]
-    }
-  ],
-  "templateId": string // Optional
+  // Add required fields
 }
+Response: 
 ```
 
-### Create Product Template
+### Login
 ```
-👑 POST /api/owner/product-templates
+🔓 POST /api/auth/login
 Body: {
-  "name": string,
-  "category": string,
-  "tags": string[],
-  "variants": [
-    {
-      "name": string,
-      "options": string[]
-    }
-  ]
+  // Add required fields
 }
+Response: 
 ```
 
-### Create Variant
+### Post-Registration Login
 ```
-👑 POST /api/owner/variants
+🔓 POST /api/auth/reg-login
 Body: {
-  "name": string,
-  "options": string[],
-  "changesPhoto": boolean,
-  "changesPrice": boolean
+  // Add required fields
 }
+Response: 
 ```
 
-### Create Tag
+### Logout
 ```
-👑 POST /api/owner/tags
+🔒 POST /api/auth/logout
+Response: 
+```
+
+### Refresh Token
+```
+🔒 POST /api/auth/refresh-token
+Response: 
+```
+
+### Send Verification Email
+```
+🔒 POST /api/auth/send-verification
+Response: 
+```
+
+### Verify Email
+```
+🔓 GET /api/auth/verify-email/:token
+Response: 
+```
+
+### Change Password
+```
+🔒 PUT /api/auth/change-password
 Body: {
-  "name": string
+  // Add required fields
 }
+Response: 
 ```
 
-### Upload Product Photos
+### Request Password Reset
 ```
-👑 POST /api/owner/products/:productId/photos
-Body: FormData
-  - photos: File[]
-  - variantOption: string // If applicable
-```
-
-### Create Promotion
-```
-👑 POST /api/owner/promotions
+🔓 POST /api/auth/request-password-reset
 Body: {
-  "code": string,
-  "discountType": "percentage" | "fixed",
-  "discountValue": number,
-  "startDate": Date,
-  "endDate": Date,
-  "applicableProducts": string[] // Product IDs
+  // Add required fields
 }
+Response: 
 ```
 
-### Update Order Status to Shipped
+### Reset Password
 ```
-👑 PUT /api/owner/orders/:orderId/ship
-```
-
-### Update Order Shipment Number
-```
-👑 PUT /api/owner/orders/:orderId/shipment-number
+🔓 POST /api/auth/reset-password/:token
 Body: {
-  "shipmentNumber": string
+  // Add required fields
 }
+Response: 
 ```
 
-### Deny Order
+### Create Owner Account
 ```
-👑 PUT /api/owner/orders/:orderId/deny
+🔑 POST /api/auth/create-owner
 Body: {
-  "reason": string
+  // Add required fields
 }
+Response: 
 ```
 
-### Cancel Promotion
+## Category Routes
+
+### Get Categories
 ```
-👑 DELETE /api/owner/promotions/:promotionId
+🔓 GET /api/categories
+Response: 
+```
+
+### Create Category
+```
+👑 POST /api/categories
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Update Category
+```
+👑 PUT /api/categories/:id
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Delete Category
+```
+👑 DELETE /api/categories/:id
+Response: 
+```
+
+## Dispute Routes
+
+### Get Dispute Details
+```
+🔒 GET /api/disputes/:id
+Response: 
+```
+
+### List Disputes
+```
+👑 GET /api/disputes
+Response: 
+```
+
+### Create Dispute
+```
+🔒 POST /api/disputes/:orderId
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Update Dispute Status
+```
+👑 PUT /api/disputes/:id/status
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Delete Dispute
+```
+👑 DELETE /api/disputes/:id
+Response: 
+```
+
+## Health Routes
+
+### Basic Health Check
+```
+🔓 GET /api/health
+Response: 
+```
+
+### Detailed Health Check
+```
+🔓 GET /api/health/details
+Response: 
+```
+
+## Message Routes
+
+### Create Message
+```
+🔒 POST /api/messages
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Get Messages
+```
+👑 GET /api/messages
+Response: 
+```
+
+### Mark Message as Read
+```
+👑 PUT /api/messages/:id/read
+Response: 
 ```
 
 ## Newsletter Routes
@@ -173,235 +291,540 @@ Body: {
 ```
 👑 POST /api/newsletters
 Body: {
-  "title": string,
-  "content": string,
-  "products": string[], // Optional
-  "promoCode": string, // Optional
-  "scheduledDate": Date
+  // Add required fields
 }
+Response: 
 ```
 
 ### Update Newsletter
 ```
-👑 PUT /api/newsletters/:newsletterId
+👑 PUT /api/newsletters/:id
 Body: {
-  "title": string,
-  "content": string,
-  "products": string[], // Optional
-  "promoCode": string, // Optional
-  "scheduledDate": Date
+  // Add required fields
 }
+Response: 
 ```
 
 ### Delete Newsletter
 ```
-👑 DELETE /api/newsletters/:newsletterId
+👑 DELETE /api/newsletters/:id
+Response: 
+```
+
+### Schedule Newsletter
+```
+👑 PUT /api/newsletters/:id/schedule
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Send Newsletter
+```
+👑 POST /api/newsletters/:id/send
+Response: 
+```
+
+### Get Subscribers
+```
+👑 GET /api/newsletters/subscribers
+Response: 
 ```
 
 ## Order Routes
 
-### Create Order
+### Create Anonymous Order
 ```
-🔓/🔒 POST /api/orders
+🔓 POST /api/orders/anon
 Body: {
-  "products": [
-    {
-      "productId": string,
-      "quantity": number,
-      "selectedVariants": { [key: string]: string }
-    }
-  ],
-  "shippingAddress": {
-    "street": string,
-    "city": string,
-    "state": string,
-    "country": string,
-    "zipCode": string
-  },
-  "paymentMethod": string,
-  "email": string // Required for non-logged-in users
+  // Add required fields
 }
+Response: 
 ```
 
-### Cancel Order
+### Get Order Details (Anonymous)
 ```
-🔒/🎟️ PUT /api/orders/:orderId/cancel
+🎟️ GET /api/orders/:orderId/:token
+Response: 
 ```
 
-### Dispute Order
+### Cancel Order (Anonymous)
 ```
-🔒/🎟️ POST /api/orders/:orderId/dispute
+🎟️ PUT /api/orders/cancel/:orderId/:token
+Response: 
+```
+
+### Mark Order as Received (Anonymous)
+```
+🎟️ PUT /api/orders/received/:orderId/:token
+Response: 
+```
+
+### Create Order (Authenticated)
+```
+🔒 POST /api/orders
 Body: {
-  "reason": string,
-  "description": string
+  // Add required fields
 }
+Response: 
 ```
 
-### Mark Order as Received
+### Get Order Details (Authenticated)
 ```
-🔒/🎟️ PUT /api/orders/:orderId/received
+🔒 GET /api/orders/:id
+Response: 
+```
+
+### Cancel Order (Authenticated)
+```
+🔒 PUT /api/orders/:orderId/cancel
+Response: 
+```
+
+### Mark Order as Received (Authenticated)
+```
+🔒 PUT /api/orders/:orderId/received
+Response: 
 ```
 
 ### Get User Order History
 ```
-🔒 GET /api/orders/history
-Query: {
-  "page": number,
-  "limit": number
-}
+🔒 GET /api/orders
+Response: 
 ```
 
-### Get Order Details
+### Get All Orders (Owner)
 ```
-🔒/🎟️ GET /api/orders/:orderId
+👑 GET /api/orders
+Response: 
+```
+
+### Update Order Status (Owner)
+```
+👑 PUT /api/orders/:id/status
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Deny Order (Owner)
+```
+👑 PUT /api/orders/:orderId/deny
+Body: {
+  // Add required fields
+}
+Response: 
 ```
 
 ### Get Order Statistics (Owner)
 ```
-👑 GET /api/owner/order-statistics
-Query: {
-  "status": string, // Optional, to filter by status
-  "startDate": Date,
-  "endDate": Date
-}
+👑 GET /api/orders/statistics
+Response: 
 ```
 
 ### Search Orders (Owner)
 ```
-👑 GET /api/owner/orders/search
-Query: {
-  "product": string, // Optional
-  "variant": string, // Optional
-  "status": string, // Optional
-  "page": number,
-  "limit": number
+👑 GET /api/orders/search
+Query Parameters: {
+  // Add query parameters
 }
+Response: 
+```
+
+## Payment Routes
+
+### Initialize Payment
+```
+🔒 POST /api/payments/initialize
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Handle Payment Callback
+```
+🔓 POST /api/payments/callback/:gateway
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Get Payment Status (Authenticated)
+```
+🔒 GET /api/payments/status/:orderId
+Response: 
+```
+
+### Process Payment (Anonymous)
+```
+🔓 POST /api/payments/process
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Get Payment Status (Anonymous)
+```
+🎟️ GET /api/payments/status/:orderId/:token
+Response: 
+```
+
+## Product Template Routes
+
+### Get Product Templates
+```
+🔓 GET /api/product-templates
+Response: 
+```
+
+### Create Product Template
+```
+👑 POST /api/product-templates
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Update Product Template
+```
+👑 PUT /api/product-templates/:id
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Delete Product Template
+```
+👑 DELETE /api/product-templates/:id
+Response: 
 ```
 
 ## Product Routes
 
-### List Products
+### Get Products
 ```
 🔓 GET /api/products
-Query: {
-  "category": string, // Optional
-  "tags": string[], // Optional
-  "page": number,
-  "limit": number
+Response: 
+```
+
+### Get Products by Tags
+```
+🔓 GET /api/products/tags
+Query Parameters: {
+  // Add query parameters
 }
+Response: 
+```
+
+### Get Products by Category
+```
+🔓 GET /api/products/category
+Query Parameters: {
+  // Add query parameters
+}
+Response: 
+```
+
+### Get Products by Tags and Category
+```
+🔓 GET /api/products/category/tags
+Query Parameters: {
+  // Add query parameters
+}
+Response: 
 ```
 
 ### Get Product Details
 ```
-🔓 GET /api/products/:productId
+🔓 GET /api/products/:id
+Response: 
 ```
 
-### Update Product (Owner)
+### Create Product
 ```
-👑 PUT /api/owner/products/:productId
+👑 POST /api/products
 Body: {
-  "name": string,
-  "description": string,
-  "price": number,
-  "category": string,
-  "tags": string[],
-  "variants": [
-    {
-      "name": string,
-      "options": string[]
-    }
-  ]
+  // Add required fields
 }
+Response: 
 ```
 
-## Category Routes
-
-### Create Category (Owner)
+### Update Product
 ```
-👑 POST /api/owner/categories
+👑 PUT /api/products/:id
 Body: {
-  "name": string,
-  "description": string
+  // Add required fields
 }
+Response: 
 ```
 
-### Delete Category (Owner)
+### Delete Product
 ```
-👑 DELETE /api/owner/categories/:categoryId
+👑 DELETE /api/products/:id
+Response: 
 ```
 
-## User Routes
-
-### Update Profile Picture
+### Add Variant
 ```
-🔒 PUT /api/users/profile-picture
+👑 POST /api/products/:productId/variants
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Update Inventory
+```
+👑 PUT /api/products/:productId/inventory
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Update Shipping Details
+```
+👑 PUT /api/products/:productId/shipping
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Update Variant Photos
+```
+👑 PUT /api/products/:productId/variant-photos
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Upload Product Photos
+```
+👑 POST /api/products/:productId/photos
 Body: FormData
-  - profilePicture: File
+Response: 
 ```
 
-### Add Shipping Address
+### Add Tag to Product
 ```
-🔒 POST /api/users/shipping-address
+👑 POST /api/products/:productId/add
 Body: {
-  "label": string,
-  "street": string,
-  "city": string,
-  "state": string,
-  "country": string,
-  "zipCode": string
+  // Add required fields
 }
+Response: 
 ```
 
-### Update Shipping Address
+### Remove Tag from Product
 ```
-🔒 PUT /api/users/shipping-address/:addressId
+👑 DELETE /api/products/:productId/remove
 Body: {
-  "label": string,
-  "street": string,
-  "city": string,
-  "state": string,
-  "country": string,
-  "zipCode": string
+  // Add required fields
 }
+Response: 
 ```
 
-## Variant Routes
+## Promotion Routes
 
-### Update Variant (Owner)
+### Create Promotion
 ```
-👑 PUT /api/owner/variants/:variantId
+👑 POST /api/promotions
 Body: {
-  "name": string,
-  "options": string[],
-  "changesPhoto": boolean,
-  "changesPrice": boolean
+  // Add required fields
 }
+Response: 
 ```
 
-### Delete Variant (Owner)
+### Update Promotion
 ```
-👑 DELETE /api/owner/variants/:variantId
+👑 PUT /api/promotions/:id
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Delete Promotion
+```
+👑 DELETE /api/promotions/:id
+Response: 
+```
+
+### List Promotions
+```
+👑 GET /api/promotions
+Response: 
+```
+
+## Shipping Routes
+
+### Generate Shipping Label
+```
+👑 POST /api/shipping/generate-label/:orderId
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Track Shipment
+```
+🔒 GET /api/shipping/track/:orderId
+Response: 
+```
+
+### Update Shipping Status
+```
+👑 PUT /api/shipping/status/:orderId
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Get Shipment Tracking
+```
+🔓 GET /api/shipping/:trackingNumber
+Response: 
 ```
 
 ## Tag Routes
 
-### Delete Tag (Owner)
+### List Tags
 ```
-👑 DELETE /api/owner/tags/:tagId
-```
-
-## Dispute Routes
-
-### Get Dispute Details
-```
-🔒/🎟️ GET /api/disputes/:disputeId
+🔓 GET /api/tags
+Response: 
 ```
 
-### Update Dispute (Owner)
+### Create Tag
 ```
-👑 PUT /api/owner/disputes/:disputeId
+👑 POST /api/tags
 Body: {
-  "status": "under review" | "resolved",
-  "resolution": string
+  // Add required fields
 }
+Response: 
+```
+
+### Update Tag
+```
+👑 PUT /api/tags/:id
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Delete Tag
+```
+👑 DELETE /api/tags/:id
+Response: 
+```
+
+## User Routes
+
+### Get User's Own Profile
+```
+🔒 GET /api/users/me
+Response: 
+```
+
+### Upload Profile Picture
+```
+🔒 PUT /api/users/upload-profile-picture
+Body: FormData
+Response: 
+```
+
+### Update Profile
+```
+🔒 PUT /api/users/profile
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Add to Wishlist
+```
+🔒 POST /api/users/wishlist
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Remove from Wishlist
+```
+🔒 DELETE /api/users/wishlist/:productId
+Response: 
+```
+
+### Add Shipping Info
+```
+🔒 POST /api/users/shipping-info
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Update Shipping Info
+```
+🔒 PUT /api/users/shipping-info/:id
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Deactivate User Profile
+```
+🎟️ DELETE /api/users/me/:token
+Response: 
+```
+
+## Variant Routes
+
+### Get Variant Details
+```
+🔓 GET /api/variants/:id
+Response: 
+```
+
+### Create Variant
+```
+👑 POST /api/variants
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Update Variant
+```
+👑 PUT /api/variants/:id
+Body: {
+  // Add required fields
+}
+Response: 
+```
+
+### Delete Variant
+```
+👑 DELETE /api/variants/:id
+Response: 
+```
+
+### Get Variants
+```
+👑 GET /api/variants
+Response: 
 ```
