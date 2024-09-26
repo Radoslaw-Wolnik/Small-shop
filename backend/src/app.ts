@@ -14,13 +14,13 @@ import newsletterRoutes from './routes/newsletter.routes';
 import orderRoutes from './routes/order.routes';
 // import ownerRoutes from './routes/owner.routes';
 import paymentRoutes from './routes/payment.routes';
-import productTemplateRoutes from './routes/product-template.routes'
 import productRoutes from './routes/product.routes';
 import promotionRoutes from './routes/promotion.routes';
 import shipmentRoutes from './routes/shipment.routes';
 import tagRoutes from './routes/tag.routes';
 import userRoutes from './routes/user.routes';
 import variantRoutes from './routes/variant.routes';
+import jobRoutes from './routes/job.routes';
 
 import { errorHandler } from './middleware/error.middleware';
 import { addRequestId } from './middleware/request-id.middleware';
@@ -71,7 +71,6 @@ apiRouter.use('/users', userRoutes);
 apiRouter.use('/products', productRoutes);
 apiRouter.use('/variants', variantRoutes);
 apiRouter.use('/categories', categoryRoutes);
-apiRouter.use('/product-templates', productTemplateRoutes);
 apiRouter.use('/payments', paymentRoutes);
 apiRouter.use('/shipping', shipmentRoutes);
 apiRouter.use('/disputes', disputeRoutes);
@@ -82,6 +81,7 @@ apiRouter.use('/orders', orderRoutes);
 // apiRouter.use('/owners', ownerRoutes);
 apiRouter.use('/promotions', promotionRoutes);
 apiRouter.use('/tags', tagRoutes);
+apiRouter.use('/jobs', jobRoutes);
 
 // Mount the router on the /api path
 app.use('/api', apiRouter);

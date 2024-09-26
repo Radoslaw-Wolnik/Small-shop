@@ -4,6 +4,7 @@ export interface AppConfig {
     port: number;
     nodeEnv: 'development' | 'production';
     frontend: string;
+    backend: string; // or stackName name or sth like that
     rotationInProgress: boolean;
     company: {
         name: string;
@@ -25,6 +26,7 @@ export const appConfig: AppConfig = {
     nodeEnv: getEnvValue('NODE_ENV', 'development') as 'development' | 'production',
     frontend: getEnvValue('FRONTEND', 'https://localhost:5173'),
     rotationInProgress: getEnvValue('ROTATION_IN_PROGRESS', 'false') === 'true',
+    backend: getEnvValue('BACKEND', 'stack_name_backend'),
     company: {
         name: getEnvValue('COMPANY_NAME', 'Your Company Name'),
         email: getEnvValue('COMPANY_EMAIL', 'your@email.com'),

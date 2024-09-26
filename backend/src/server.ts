@@ -5,8 +5,8 @@ import app from './app.js';
 import connectDB from './utils/db-connection.util.js';
 import environment from './config/environment.js';
 import logger from './utils/logger.util';
-import { initCleanupJob } from './scripts/cleanup-revoked-tokens.js';
 import { gracefulShutdown } from './utils/server.util';
+import { initializeSchedules } from './schedules/init-schedules';
 
 // Set port from environment or fallback to 5000
 const PORT: number = environment.app.port || 5000;
@@ -19,9 +19,9 @@ const startServer = async () => {
     const connectionTime = Date.now() - startTime;
     logger.info('Connected to database', { connectionTimeMs: connectionTime });
 
-    // Initialize background jobs
-    await initCleanupJob();
-    logger.info('Background jobs initialized');
+    // Initialize cron jobs
+    initializeSchedules();
+    logger.info('Cron jobs initialized');
     
     const server: http.Server = http.createServer(app);
     server.listen(PORT, () => {
