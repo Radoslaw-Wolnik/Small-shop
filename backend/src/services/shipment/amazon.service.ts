@@ -1,56 +1,82 @@
-// src/services/shipment/amazon-shipping.service.ts
+// src/services/shipping/amazon-shipping.service.ts
 
 import axios from 'axios';
+import crypto from 'crypto';
 import { IOrderDocument } from '../../models/order.model';
-import { CustomError, ShippingError } from '../../utils/custom-errors.util';
+import { ShippingError } from '../../utils/custom-errors.util';
 import environment from '../../config/environment';
 
-// You would typically get these from your Amazon Seller Central account
 const AMAZON_API_URL = environment.shipment.amazonApiUrl;
-const AMAZON_SELLER_ID = environment.shipment.amazonSellerId;
 const AMAZON_ACCESS_KEY = environment.shipment.amazonAccessKey;
 const AMAZON_SECRET_KEY = environment.shipment.amazonSecretKey;
+const AMAZON_SELLER_ID = environment.shipment.amazonSellerId;
 
-export async function generateAmazonLabel(order: IOrderDocument): Promise<{ url: string; trackingNumber: string }> {
+function generateAmazonAuthHeader(method: string, path: string, data: string = '') {
+  const timestamp = new Date().toISOString();
+  const stringToSign = `${method}\n${path}\n\nhost:${new URL(AMAZON_API_URL).host}\nx-amz-date:${timestamp}\n\nhost;x-amz-date\n${crypto.createHash('sha256').update(data).digest('hex')}`;
+  const signature = crypto.createHmac('sha256', AMAZON_SECRET_KEY).update(stringToSign).digest('hex');
+  return `AWS4-HMAC-SHA256 Credential=${AMAZON_ACCESS_KEY}/${timestamp.substr(0, 8)}/us-east-1/execute-api/aws4_request, SignedHeaders=host;x-amz-date, Signature=${signature}`;
+}
+
+export async function generateAmazonShippingLabel(order: IOrderDocument): Promise<{ url: string; trackingNumber: string }> {
   try {
-    // In a real implementation, you would make an API call to Amazon's Merchant Fulfillment API
-    // This is a simplified example
-    const response = await axios.post(`${AMAZON_API_URL}/shipping/v1/shipments`, {
-      sellerId: AMAZON_SELLER_ID,
+    const path = '/shipping/v1/shipments';
+    const data = JSON.stringify({
       shipmentRequestDetails: {
-        amazon_order_id: order.id.toString(),
-        item_list: order.products.map(product => ({
+        amazonOrderId: order._id.toString(),
+        sellerOrderId: order._id.toString(),
+        itemList: order.products.map(product => ({
           orderItemId: product.product.toString(),
           quantity: product.quantity
         })),
-        ship_from_address: {
-          name: 'Your Store Name',
-          address_line1: 'Your Address Line 1',
-          city: 'Your City',
-          state_or_province_code: 'YS',
-          postal_code: 'Your Postal Code',
-          country_code: 'Your Country Code'
+        shipFromAddress: {
+          name: "Your Company Name",
+          addressLine1: "Your Street",
+          city: "Your City",
+          stateOrProvinceCode: "YS",
+          postalCode: "Your Zip Code",
+          countryCode: "US"
         },
-        ship_to_address: order.shippingAddress,
-        shipping_service_options: {
-          delivery_experience: 'DeliveryConfirmationWithAdultSignature',
-          carrier_will_pick_up: false,
-          declared_value: {
-            currency_code: 'USD',
+        shipToAddress: {
+          name: `${order.user.firstName} ${order.user.lastName}`,
+          addressLine1: order.shippingAddress.street,
+          city: order.shippingAddress.city,
+          stateOrProvinceCode: order.shippingAddress.state,
+          postalCode: order.shippingAddress.zipCode,
+          countryCode: order.shippingAddress.country
+        },
+        packageDimensions: {
+          length: 30,
+          width: 20,
+          height: 10,
+          unit: "centimeters"
+        },
+        weight: {
+          value: 1,
+          unit: "kilograms"
+        },
+        shippingServiceOptions: {
+          deliveryExperience: "DeliveryConfirmationWithoutSignature",
+          carrierWillPickUp: false,
+          declaredValue: {
+            currencyCode: "USD",
             amount: order.totalAmount
           }
         }
       }
-    }, {
+    });
+
+    const response = await axios.post(`${AMAZON_API_URL}${path}`, data, {
       headers: {
-        'x-amz-access-token': AMAZON_ACCESS_KEY,
-        'x-amz-secret-token': AMAZON_SECRET_KEY
+        'Authorization': generateAmazonAuthHeader('POST', path, data),
+        'Content-Type': 'application/json',
+        'x-amz-seller-id': AMAZON_SELLER_ID
       }
     });
 
     return {
-      url: response.data.label_url,
-      trackingNumber: response.data.tracking_id
+      url: response.data.payload.labelResults.labelDownloadURL,
+      trackingNumber: response.data.payload.trackingId
     };
   } catch (error) {
     throw new ShippingError('Failed to generate Amazon shipping label');
@@ -59,18 +85,18 @@ export async function generateAmazonLabel(order: IOrderDocument): Promise<{ url:
 
 export async function trackAmazonShipment(trackingNumber: string): Promise<any> {
   try {
-    // In a real implementation, you would make an API call to Amazon's tracking service
-    const response = await axios.get(`${AMAZON_API_URL}/tracking/v1/trackingInfo/${trackingNumber}`, {
+    const path = `/shipping/v1/tracking/${trackingNumber}`;
+    const response = await axios.get(`${AMAZON_API_URL}${path}`, {
       headers: {
-        'x-amz-access-token': AMAZON_ACCESS_KEY,
-        'x-amz-secret-token': AMAZON_SECRET_KEY
+        'Authorization': generateAmazonAuthHeader('GET', path),
+        'x-amz-seller-id': AMAZON_SELLER_ID
       }
     });
 
     return {
-      status: response.data.tracking_status,
-      lastUpdate: response.data.last_update_date,
-      estimatedDelivery: response.data.estimated_delivery_date
+      status: response.data.payload.trackingStatus,
+      lastUpdate: response.data.payload.eventHistory[0].eventDate,
+      estimatedDelivery: response.data.payload.promisedDeliveryDate
     };
   } catch (error) {
     throw new ShippingError('Failed to track Amazon shipment');
