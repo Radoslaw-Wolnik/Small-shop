@@ -1,5 +1,5 @@
 // src/models/product.model.ts
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Model } from 'mongoose';
 import slugify from 'slugify';
 
 // Updated Product Model
@@ -49,6 +49,13 @@ export interface IProductDocument extends Document {
     slug: string;
   };
   isActive: boolean;
+  getStructuredData: () => Record<string, any>;
+  reserveInventory: (variantCombination: string, quantity: number) => Promise<void>;
+  releaseInventory: (variantCombination: string, quantity: number) => Promise<void>;
+}
+
+interface IProductModel extends Model<IProductDocument> {
+  findBySlug: (slug: string) => Promise<IProductDocument | null>;
 }
 
 const productSchema = new Schema<IProductDocument>({
@@ -107,8 +114,7 @@ productSchema.pre('save', function(next) {
   next();
 });
 
-
-// Example of implementing schema.org structured data in Product model
+// Method to get structured data
 productSchema.methods.getStructuredData = function() {
   return {
     "@context": "https://schema.org/",
@@ -126,25 +132,35 @@ productSchema.methods.getStructuredData = function() {
       "url": `https://yoursite.com/product/${this.seo.slug}`,
       "priceCurrency": "USD",
       "price": this.basePrice,
-      "availability": this.inventory.length > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+      "availability": this.inventory.some((inv: { stock: number }) => inv.stock > 0) ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
     }
   };
 };
 
-productSchema.methods.reserveInventory = async function(quantity: number) {
-  if (this.inventory < quantity) {
+// Method to reserve inventory
+productSchema.methods.reserveInventory = async function(this: IProductDocument, variantCombination: string, quantity: number) {
+  const inventoryItem = this.inventory.find((inv: { variantCombination: string; stock: number }) => inv.variantCombination === variantCombination);
+  if (!inventoryItem || inventoryItem.stock < quantity) {
     throw new Error('Insufficient inventory');
   }
-  this.inventory -= quantity;
-  this.reservedInventory = (this.reservedInventory || 0) + quantity;
+  inventoryItem.stock -= quantity;
   await this.save();
 };
 
-productSchema.methods.releaseInventory = async function(quantity: number) {
-  this.reservedInventory = Math.max((this.reservedInventory || 0) - quantity, 0);
-  this.inventory += quantity;
-  await this.save();
+// Method to release inventory
+productSchema.methods.releaseInventory = async function(this: IProductDocument, variantCombination: string, quantity: number) {
+  const inventoryItem = this.inventory.find((inv: { variantCombination: string; stock: number }) => inv.variantCombination === variantCombination);
+  if (inventoryItem) {
+    inventoryItem.stock += quantity;
+    await this.save();
+  }
 };
 
+// Static method to find product by slug
+productSchema.statics.findBySlug = function(slug: string) {
+  return this.findOne({ 'seo.slug': slug });
+};
 
-export default mongoose.model<IProductDocument>('Product', productSchema);
+const Product = mongoose.model<IProductDocument, IProductModel>('Product', productSchema);
+
+export default Product;

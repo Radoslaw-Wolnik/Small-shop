@@ -1,6 +1,6 @@
 // src/controllers/product.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import Product from '../models/product.model';
+import Product, { IProductDocument } from '../models/product.model';
 import Category from '../models/category.model';
 import Variant from '../models/variant.model';
 import Order from '../models/order.model';
@@ -15,7 +15,7 @@ export const createProduct = async (req: AuthRequestWithFiles, res: Response, ne
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
     const slug = slugify(name, { lower: true, strict: true });
-    const existingProduct = await Product.findOne({ 'seo.slug': slug });
+    const existingProduct = await Product.findBySlug(slug);
     if (existingProduct) {
       throw new BadRequestError('A product with this name already exists');
     }
@@ -90,8 +90,13 @@ export const updateProduct = async (req: AuthRequestWithFiles, res: Response, ne
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 
     if (updateData.name) {
+      const newSlug = slugify(updateData.name, { lower: true, strict: true });
+      const existingProduct = await Product.findBySlug(newSlug);
+      if (existingProduct && existingProduct.id.toString() !== id) {
+        throw new BadRequestError('A product with this name already exists');
+      }
       updateData.seo = updateData.seo || {};
-      updateData.seo.slug = slugify(updateData.name, { lower: true, strict: true });
+      updateData.seo.slug = newSlug;
     }
 
     if (files.defaultPhoto) {
@@ -342,9 +347,53 @@ export const saveProductPhotos = async (req: AuthRequestWithFiles, res: Response
   }
 };
 
-export const copyProduct = async () => {
+export const copyProduct = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { productId } = req.params;
+    const { newName } = req.body;
 
-}
+    const originalProduct = await Product.findById(productId);
+    if (!originalProduct) {
+      throw new NotFoundError('Product');
+    }
+
+    // Create a new slug based on the new name
+    const newSlug = slugify(newName, { lower: true, strict: true });
+    const existingProduct = await Product.findBySlug(newSlug);
+    if (existingProduct) {
+      throw new BadRequestError('A product with this name already exists');
+    }
+
+    // Create a new product object with copied data
+    const copiedProductData: Partial<IProductDocument> = {
+      name: newName,
+      description: originalProduct.description,
+      category: originalProduct.category,
+      tags: [...originalProduct.tags],
+      basePrice: originalProduct.basePrice,
+      variants: JSON.parse(JSON.stringify(originalProduct.variants)), // Deep copy
+      defaultPhoto: originalProduct.defaultPhoto, // We're referencing the same photo
+      images: originalProduct.images.map(img => ({ ...img })), // Shallow copy of image objects
+      inventory: originalProduct.inventory.map(inv => ({ ...inv })), // Shallow copy of inventory
+      shippingDetails: { ...originalProduct.shippingDetails },
+      seo: {
+        ...originalProduct.seo,
+        slug: newSlug,
+        metaTitle: `Copy of ${originalProduct.seo.metaTitle}`,
+        metaDescription: originalProduct.seo.metaDescription,
+      },
+      isActive: false, // Set the copied product as inactive by default
+    };
+
+    const newProduct = new Product(copiedProductData);
+    await newProduct.save();
+
+    logger.info('Product copied', { originalProductId: productId, newProductId: newProduct._id, copiedBy: req.user?.id });
+    res.status(201).json(newProduct);
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 export const getProductStatistics = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
