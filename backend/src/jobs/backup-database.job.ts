@@ -1,11 +1,12 @@
 import { exec } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
-import environment from '../../config/environment';
+import logger from '../utils/logger.util';
+import environment from '../config/environment';
 
-const backupDatabase = async () => {
+export const backupDatabase = async () => {
   const timestamp = new Date().toISOString().replace(/:/g, '-');
-  const backupDir = path.join(__dirname, 'database_backups');
+  const backupDir = path.join(__dirname, '..', '..', 'database_backups');
   const backupPath = path.join(backupDir, `backup_${timestamp}.gz`);
 
   try {
@@ -18,18 +19,16 @@ const backupDatabase = async () => {
     // Execute mongodump
     exec(command, (error, stdout, stderr) => {
       if (error) {
-        console.error(`Error: ${error.message}`);
+        logger.error(`Error creating database backup: ${error.message}`);
         return;
       }
       if (stderr) {
-        console.error(`stderr: ${stderr}`);
+        logger.error(`stderr during database backup: ${stderr}`);
         return;
       }
-      console.log(`Database backup created successfully at ${backupPath}`);
+      logger.info(`Database backup created successfully at ${backupPath}`);
     });
   } catch (error) {
-    console.error('Error creating database backup:', (error as Error).message);
+    logger.error('Error creating database backup:', (error as Error).message);
   }
 };
-
-backupDatabase();

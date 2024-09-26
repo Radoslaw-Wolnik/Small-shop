@@ -1,10 +1,11 @@
 import { exec } from 'child_process';
 import fs from 'fs/promises';
 import path from 'path';
-import environment from '../../config/environment';
+import logger from '../utils/logger.util';
+import environment from '../config/environment';
 
-const restoreDatabase = async () => {
-  const backupDir = path.join(__dirname, 'database_backups');
+export const restoreDatabase = async () => {
+  const backupDir = path.join(__dirname, '..', '..', 'database_backups');
 
   try {
     // Get list of backup files
@@ -12,7 +13,7 @@ const restoreDatabase = async () => {
     const backupFiles = files.filter(file => file.startsWith('backup_') && file.endsWith('.gz'));
 
     if (backupFiles.length === 0) {
-      console.log('No backup files found.');
+      logger.info('No backup files found.');
       return;
     }
 
@@ -29,18 +30,16 @@ const restoreDatabase = async () => {
     // Execute mongorestore
     exec(command, (error, stdout, stderr) => {
       if (error) {
-        console.error(`Error: ${error.message}`);
+        logger.error(`Error restoring database: ${error.message}`);
         return;
       }
       if (stderr) {
-        console.error(`stderr: ${stderr}`);
+        logger.error(`stderr during database restore: ${stderr}`);
         return;
       }
-      console.log(`Database restored successfully from ${backupPath}`);
+      logger.info(`Database restored successfully from ${backupPath}`);
     });
   } catch (error) {
-    console.error('Error restoring database:', (error as Error).message);
+    logger.error('Error restoring database:', (error as Error).message);
   }
 };
-
-restoreDatabase();
