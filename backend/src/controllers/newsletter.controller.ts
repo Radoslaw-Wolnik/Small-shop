@@ -3,7 +3,6 @@ import { Request, Response, NextFunction } from 'express';
 import Newsletter from '../models/newsletter.model';
 import { NotFoundError, InternalServerError, CustomError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
-import { emailService } from '../services/email.service';
 import User from '../models/user.model';
 import environment from '../config/environment';
 
@@ -108,7 +107,7 @@ export const sendNewsletter = async (req: AuthRequest, res: Response, next: Next
       );
       */
 
-      await emailService.sendEmail({
+      await environment.email.service?.sendEmail({
         to: await subscriber.getDecryptedEmail(),
         ...emailContent
       });

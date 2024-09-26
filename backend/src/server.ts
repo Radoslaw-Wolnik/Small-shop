@@ -7,6 +7,7 @@ import environment from './config/environment.js';
 import logger from './utils/logger.util';
 import { gracefulShutdown } from './utils/server.util';
 import { initializeSchedules } from './schedules/init-schedules';
+import { emailService } from './services/email.service';
 
 // Set port from environment or fallback to 5000
 const PORT: number = environment.app.port || 5000;
@@ -22,6 +23,10 @@ const startServer = async () => {
     // Initialize email templates
     await environment.email.templateManager.loadTemplates();
     logger.info('Email templates loaded');
+
+    // Initialize email service
+    environment.email.service = emailService;
+    logger.info('Email service initialized');
 
     // Initialize cron jobs
     initializeSchedules();

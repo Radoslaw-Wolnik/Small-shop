@@ -5,9 +5,9 @@ import Product from '../models/product.model';
 import { NotFoundError, UnauthorizedError, BadRequestError, InternalServerError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 import { generateMagicToken } from '../utils/auth.util';
-import { emailService } from '../services/email.service';
 import { formatOrderDetails } from '../utils/order.util';
 import mongoose from 'mongoose';
+import environment from '../config/environment';
 
 export const createOrder = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const session = await mongoose.startSession();
@@ -64,7 +64,7 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
     await session.commitTransaction();
     session.endSession();
 
-    await emailService.sendTemplatedEmail(
+    await environment.email.service?.sendTemplatedEmail(
       user.email,
       'orderConfirmation',
       {

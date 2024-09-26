@@ -7,10 +7,10 @@ import RevokedToken from '../models/revoked-token.model';
 import AuthRequest from '../../types/global';
 import { generateToken, setTokenCookie, refreshToken as refreshAuthToken, generateShortLivedToken, setShortLivedTokenCookie } from '../middleware/auth.middleware';
 import environment from '../config/environment';
-import { emailService } from '../services/email.service';
 
 import { ValidationError, UnauthorizedError, NotFoundError, ConflictError, InternalServerError, AuthenticationError, CustomError, BadRequestError, ResourceExistsError, GoneError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
+import { env } from 'process';
 
 interface LoginRequest extends Request {
   body: {
@@ -170,7 +170,7 @@ export const register = async (req: RegisterRequest, res: Response, next: NextFu
 
     // Send verification email
     // await sendVerificationEmail(user.email, verificationToken);
-    await emailService.sendTemplatedEmail(
+    await environment.email.service?.sendTemplatedEmail(
       email,
       'verifyEmail',
       { verificationUrl: `${environment.app.frontend}/verify-email/${verificationToken}` }
@@ -213,7 +213,7 @@ export const sendVerificationEmail = async (req: AuthRequest, res: Response, nex
 
     const decryptedEmail = await req.user.getDecryptedEmail();
 
-    await emailService.sendTemplatedEmail(
+    await environment.email.service?.sendTemplatedEmail(
       decryptedEmail,
       'verifyEmail',
       { verificationUrl: `${environment.app.frontend}/verify-email/${verificationToken}` }
@@ -309,7 +309,7 @@ export const requestPasswordReset = async (req: RequestPasswordResetRequest, res
     user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
     await user.save();
     
-    await emailService.sendTemplatedEmail(
+    await environment.email.service?.sendTemplatedEmail(
       email,
       'passwordReset',
       { verificationUrl: `${environment.app.frontend}/reset-password/${resetToken}` }
@@ -413,7 +413,7 @@ export const createMagicLink = async (req: Request, res: Response, next: NextFun
     user.oneTimeLoginExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
     await user.save();
 
-    await emailService.sendTemplatedEmail(
+    await environment.email.service?.sendTemplatedEmail(
       email,
       'magicLink',
       { verificationUrl: `${environment.app.frontend}/magic-login/${magicToken}` }

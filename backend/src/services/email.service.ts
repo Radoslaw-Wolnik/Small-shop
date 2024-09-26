@@ -11,10 +11,11 @@ interface EmailOptions {
   html?: string;
 }
 
-class EmailService {
+export class EmailService {
+  private static instance: EmailService;
   private transporter: nodemailer.Transporter;
 
-  constructor() {
+  private constructor() {
     this.transporter = nodemailer.createTransport({
       host: environment.email.host,
       port: environment.email.port,
@@ -23,6 +24,13 @@ class EmailService {
         pass: environment.email.password,
       }
     });
+  }
+
+  public static getInstance(): EmailService {
+    if (!EmailService.instance) {
+      EmailService.instance = new EmailService();
+    }
+    return EmailService.instance;
   }
 
   async sendEmail({ to, subject, text, html }: EmailOptions): Promise<void> {
@@ -52,7 +60,8 @@ class EmailService {
   }
 }
 
-export const emailService = new EmailService();
+// Export a single instance
+export const emailService = EmailService.getInstance();
 
 /* THE DEVELOPMENT mail trying
  * This setup will create a new test account for each email sent, which is fine for development. 
