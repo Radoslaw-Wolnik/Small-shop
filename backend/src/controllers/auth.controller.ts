@@ -50,12 +50,13 @@ export const login = async (req: LoginRequest, res: Response, next: NextFunction
       throw new UnauthorizedError('Please verify your email before logging in');
     }
 
+    // Update lastTimeActive
+    user.lastTimeActive = new Date();
+    await user.save();
+
     // Create and return JWT token
     const token = generateToken(user);
     setTokenCookie(res, token);
-
-    user.lastTimeActive = new Date();
-    await user.save();
 
     logger.info('User logged in successfully', { userId: user._id });
     res.json({ message: 'Login successful', user: { id: user._id, role: user.role } });
@@ -141,6 +142,7 @@ export const register = async (req: RegisterRequest, res: Response, next: NextFu
         user.username = username;
         user.password = password;
         user.isAnonymous = false;
+        user.isVerified = false; // Require or not require the email-verification? verification 
       } else {
         throw new BadRequestError('User already exists');
       }
@@ -166,6 +168,9 @@ export const register = async (req: RegisterRequest, res: Response, next: NextFu
     const verificationUrl = `${environment.app.frontend}/verify-email/${verificationToken}`;
     // console.log('Attempting to send email to:', user.email);
     //console.log('Verification URL:', verificationUrl);
+
+    // Send verification email
+    // await sendVerificationEmail(user.email, verificationToken);
     await sendEmail({
       to: email,
       subject: 'Verify Your Email',

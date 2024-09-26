@@ -7,7 +7,7 @@ import Order from '../models/order.model';
 import { generatePocztaPolskaLabel, trackPocztaPolskaShipment } from '../services/shipment/poczta-polska.service';
 import { generateDHLLabel, trackDHLShipment } from '../services/shipment/dhl.service';
 import { generateAmazonLabel, trackAmazonShipment } from '../services/shipment/amazon.service';
-import { generatePaczkomatyLabel, trackPaczkomatyShipment } from '../services/shipment/paczkomaty.service';
+import { generatePaczkomatyLabel, trackPaczkomatyShipment } from '../services/shipment/inPost.service';
 
 export const generateShippingLabel = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {

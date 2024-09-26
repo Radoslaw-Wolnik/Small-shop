@@ -131,4 +131,20 @@ productSchema.methods.getStructuredData = function() {
   };
 };
 
+productSchema.methods.reserveInventory = async function(quantity: number) {
+  if (this.inventory < quantity) {
+    throw new Error('Insufficient inventory');
+  }
+  this.inventory -= quantity;
+  this.reservedInventory = (this.reservedInventory || 0) + quantity;
+  await this.save();
+};
+
+productSchema.methods.releaseInventory = async function(quantity: number) {
+  this.reservedInventory = Math.max((this.reservedInventory || 0) - quantity, 0);
+  this.inventory += quantity;
+  await this.save();
+};
+
+
 export default mongoose.model<IProductDocument>('Product', productSchema);

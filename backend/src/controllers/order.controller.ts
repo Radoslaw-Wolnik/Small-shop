@@ -4,11 +4,29 @@ import User from '../models/user.model';
 import Product from '../models/product.model';
 import { NotFoundError, UnauthorizedError, BadRequestError, InternalServerError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
-import { generateMagicLink } from '../utils/auth.util';
+import { generateMagicToken } from '../utils/auth.util';
 
 export const createOrder = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
-    const { products, shippingAddress, shippingMethod, paymentMethod } = req.body;
+    
+    const { products, shippingAddress, shippingMethod, paymentMethod, email } = req.body;
+
+    let user = req.user;
+    if (!user && email) {
+      // Create or find anonymous user
+      user = await User.findOne({ email, isAnonymous: true }) || new User({ email, isAnonymous: true });
+      user.oneTimeLoginToken, user.oneTimeLoginExpires = await generateMagicToken();
+      await user.save();
+
+      const magicLink = await generateMagicLink();
+      orderData.magicLink = magicLink.token;
+      orderData.magicLinkExpires = magicLink.expires;
+
+      // Send magic link email
+      await sendMagicLinkEmail(email, magicToken);
+    }
 
     // Calculate total amount and check inventory
     let totalAmount = 0;
@@ -22,8 +40,7 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
       }
       totalAmount += product.price * item.quantity;
       // Update inventory
-      product.inventory -= item.quantity;
-      await product.save();
+      await product.reserveInventory(item.quantity);
     }
 
     const orderData = {
@@ -36,19 +53,18 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
       status: 'pending'
     };
 
-    if (!req.user) {
-      // For anonymous users, create a anon user account 
-      const magicLink = await generateMagicLink();
-      orderData.magicLink = magicLink.token;
-      orderData.magicLinkExpires = magicLink.expires;
-    }
 
     const order = new Order(orderData);
     await order.save();
 
+    await session.commitTransaction();
+    session.endSession();
+
     logger.info('Order created', { orderId: order._id, userId: req.user?._id });
     res.status(201).json(order);
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     next(error);
   }
 };
@@ -113,6 +129,8 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response, next: N
 };
 
 export const cancelOrder = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     const { orderId, token } = req.params;
     let order;
@@ -133,17 +151,25 @@ export const cancelOrder = async (req: AuthRequest, res: Response, next: NextFun
       throw new BadRequestError('Order cannot be cancelled');
     }
 
-    order.status = 'cancelled';
-    await order.save();
-
     // Restore inventory
     for (const item of order.products) {
-      await Product.findByIdAndUpdate(item.product, { $inc: { inventory: item.quantity } });
+      const product = await Product.findById(item.product);
+      if (product) {
+        await product.releaseInventory(item.quantity);
+      }
     }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    order.status = 'cancelled';
+    await order.save();
 
     logger.info('Order cancelled', { orderId, userId: req.user?._id });
     res.json({ message: 'Order cancelled successfully' });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     next(error);
   }
 };

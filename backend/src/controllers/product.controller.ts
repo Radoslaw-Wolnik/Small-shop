@@ -3,7 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import Product from '../models/product.model';
 import Category from '../models/category.model';
 import Variant from '../models/variant.model';
-import { NotFoundError, BadRequestError, InternalServerError } from '../utils/custom-errors.util';
+import Order from '../models/order.model';
+import { NotFoundError, BadRequestError, InternalServerError, UnauthorizedError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 
 import slugify from 'slugify';
@@ -336,6 +337,69 @@ export const saveProductPhotos = async (req: AuthRequestWithFiles, res: Response
 
     logger.info('Product photos saved', { productId, count: files.length, updatedBy: req.user!.id });
     res.json(product);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const copyProduct = async () => {
+
+}
+
+
+export const getProductStatistics = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user?.role !== 'owner' && req.user?.role !== 'admin') {
+      throw new UnauthorizedError('Not authorized to view product statistics');
+    }
+
+    const totalProducts = await Product.countDocuments();
+    const lowStockProducts = await Product.countDocuments({ inventory: { $lt: 10 } });
+    const outOfStockProducts = await Product.countDocuments({ inventory: 0 });
+
+    const inventoryValue = await Product.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalValue: { $sum: { $multiply: ["$price", "$inventory"] } }
+        }
+      }
+    ]);
+
+    const topSellingProducts = await Order.aggregate([
+      { $unwind: "$products" },
+      {
+        $group: {
+          _id: "$products.product",
+          totalSold: { $sum: "$products.quantity" }
+        }
+      },
+      { $sort: { totalSold: -1 } },
+      { $limit: 5 },
+      {
+        $lookup: {
+          from: "products",
+          localField: "_id",
+          foreignField: "_id",
+          as: "productInfo"
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          totalSold: 1,
+          productName: { $arrayElemAt: ["$productInfo.name", 0] }
+        }
+      }
+    ]);
+
+    res.json({
+      totalProducts,
+      lowStockProducts,
+      outOfStockProducts,
+      inventoryValue: inventoryValue[0]?.totalValue || 0,
+      topSellingProducts
+    });
   } catch (error) {
     next(error);
   }
