@@ -3,8 +3,9 @@ import { Request, Response, NextFunction } from 'express';
 import Newsletter from '../models/newsletter.model';
 import { NotFoundError, InternalServerError, CustomError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
-import sendEmail from '../services/email.service';
+import { emailService } from '../services/email.service';
 import User from '../models/user.model';
+import environment from '../config/environment';
 
 export const getNewsletters = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -93,14 +94,28 @@ export const sendNewsletter = async (req: AuthRequest, res: Response, next: Next
     }
 
     const subscribers = await User.find({ 'notificationPreferences.newsletters': true });
+
+    const emailContent = environment.email.templateManager.renderTemplate(
+      'newsletter', { newsletterTitle: newsletter.title, newsletterContent: newsletter.content }
+    );
     
     for (const subscriber of subscribers) {
-      await sendEmail({
+      /* or if you want to render on the fly, but thats a render every time an email is beeing send
+      await emailService.sendTemplatedEmail(
+        await subscriber.getDecryptedEmail(),
+        'newsletter',
+        { newsletterTitle: newsletter.title, newsletterContent: newsletter.content }
+      );
+      */
+
+      await emailService.sendEmail({
         to: await subscriber.getDecryptedEmail(),
-        subject: newsletter.title,
-        html: newsletter.content
+        ...emailContent
       });
     }
+
+    
+
 
     newsletter.status = 'sent';
     newsletter.sentDate = new Date();

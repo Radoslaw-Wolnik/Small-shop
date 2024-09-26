@@ -1,18 +1,37 @@
-import mongoose, { Document, Schema } from "mongoose";
-
-interface IEmailTemplateDocument extends Document {
-  name: string;
-  subject: string;
-  body: string;
-  variables: string[];
+{
+  "verifyEmail": {
+    "name": "verifyEmail",
+    "subject": "Verify Your Email",
+    "htmlBody": "<h1>Verify Your Email</h1><p>Please click the link below to verify your email address:</p><a href=\"{{verificationUrl}}\">{{verificationUrl}}</a><p>This link will expire in 24 hours.</p>",
+    "textBody": "Verify Your Email\n\nPlease click the link below to verify your email address:\n\n{{verificationUrl}}\n\nThis link will expire in 24 hours.",
+    "variables": ["verificationUrl"]
+  },
+  "passwordReset": {
+    "name": "passwordReset",
+    "subject": "Password Reset Request",
+    "htmlBody": "<h1>Password Reset Request</h1><p>Please click the link below to reset your password:</p><a href=\"{{resetUrl}}\">{{resetUrl}}</a><p>This link will expire in 1 hour.</p>",
+    "textBody": "Password Reset Request\n\nPlease click the link below to reset your password:\n\n{{resetUrl}}\n\nThis link will expire in 1 hour.",
+    "variables": ["resetUrl"]
+  },
+  "magicLink": {
+    "name": "magicLink",
+    "subject": "Your Magic Login Link",
+    "htmlBody": "<h1>Magic Login Link</h1><p>Click the link below to log in:</p><a href=\"{{magicLink}}\">{{magicLink}}</a><p>This link will expire in 15 minutes.</p>",
+    "textBody": "Magic Login Link\n\nClick the link below to log in:\n\n{{magicLink}}\n\nThis link will expire in 15 minutes.",
+    "variables": ["magicLink"]
+  },
+  "newsletter": {
+    "name": "newsletter",
+    "subject": "{{newsletterTitle}}",
+    "htmlBody": "<h1>{{newsletterTitle}}</h1>{{newsletterContent}}",
+    "textBody": "{{newsletterTitle}}\n\n{{newsletterContent}}",
+    "variables": ["newsletterTitle", "newsletterContent"]
+  },
+  "orderConfirmation": {
+    "name": "orderConfirmation",
+    "subject": "Order Confirmation - Order #{{orderId}}",
+    "htmlBody": "<h1>Order Confirmation</h1><p>Thank you for your order!</p><p>Order ID: {{orderId}}</p><p>Total Amount: {{totalAmount}}</p><h2>Order Details:</h2>{{orderDetails}}",
+    "textBody": "Order Confirmation\n\nThank you for your order!\n\nOrder ID: {{orderId}}\nTotal Amount: {{totalAmount}}\n\nOrder Details:\n{{orderDetails}}",
+    "variables": ["orderId", "totalAmount", "orderDetails"]
+  }
 }
-  
-const emailTemplateSchema = new Schema<IEmailTemplateDocument>({
-  name: { type: String, required: true, unique: true },
-  subject: { type: String, required: true },
-  body: { type: String, required: true },
-  variables: [{ type: String }],
-});
-
-export default mongoose.model<IEmailTemplateDocument>('EmailTemplate', emailTemplateSchema);
-

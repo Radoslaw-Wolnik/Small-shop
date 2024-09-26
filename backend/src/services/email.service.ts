@@ -1,6 +1,8 @@
 // utils/sendEmail.js
 import nodemailer from 'nodemailer';
 import environment from '../config/environment';
+import templateManager from '../utils/email-templates.util';
+import logger from '../utils/logger.util';
 
 interface EmailOptions {
   to: string;
@@ -9,36 +11,48 @@ interface EmailOptions {
   html?: string;
 }
 
-const transporter = nodemailer.createTransport({
-  host: environment.email.host,
-  port: environment.email.port,
-  auth: {
-    user: environment.email.user,
-    pass: environment.email.password,
+class EmailService {
+  private transporter: nodemailer.Transporter;
+
+  constructor() {
+    this.transporter = nodemailer.createTransport({
+      host: environment.email.host,
+      port: environment.email.port,
+      auth: {
+        user: environment.email.user,
+        pass: environment.email.password,
+      }
+    });
   }
-});
 
-const sendEmail = async ({ to, subject, text, html }: EmailOptions): Promise<nodemailer.SentMessageInfo> => {
-  const mailOptions: nodemailer.SendMailOptions = {
-    from: environment.email.from,
-    to,
-    subject,
-    text,
-    html
-  };
+  async sendEmail({ to, subject, text, html }: EmailOptions): Promise<void> {
+    const mailOptions: nodemailer.SendMailOptions = {
+      from: environment.email.from,
+      to,
+      subject,
+      text,
+      html
+    };
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent: ', info.messageId);
-    return info;
-  } catch (error) {
-    console.error('Error sending email: ', error);
-    throw error;
+    try {
+      const info = await this.transporter.sendMail(mailOptions);
+      logger.info('Email sent successfully', { messageId: info.messageId, to });
+    } catch (error) {
+      logger.error('Error sending email', { error, to });
+      throw error;
+    }
   }
-};
 
-export default sendEmail;
+  async sendTemplatedEmail(to: string, templateName: string, variables: Record<string, any>): Promise<void> {
+    const renderedTemplate = templateManager.renderTemplate(templateName, variables);
+    await this.sendEmail({
+      to,
+      ...renderedTemplate
+    });
+  }
+}
 
+export const emailService = new EmailService();
 
 /* THE DEVELOPMENT mail trying
  * This setup will create a new test account for each email sent, which is fine for development. 

@@ -7,7 +7,7 @@ import RevokedToken from '../models/revoked-token.model';
 import AuthRequest from '../../types/global';
 import { generateToken, setTokenCookie, refreshToken as refreshAuthToken, generateShortLivedToken, setShortLivedTokenCookie } from '../middleware/auth.middleware';
 import environment from '../config/environment';
-import sendEmail from '../services/email.service';
+import { emailService } from '../services/email.service';
 
 import { ValidationError, UnauthorizedError, NotFoundError, ConflictError, InternalServerError, AuthenticationError, CustomError, BadRequestError, ResourceExistsError, GoneError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
@@ -165,22 +165,17 @@ export const register = async (req: RegisterRequest, res: Response, next: NextFu
     const shortLivedToken = generateShortLivedToken(user);
     setShortLivedTokenCookie(res, shortLivedToken);
 
-    const verificationUrl = `${environment.app.frontend}/verify-email/${verificationToken}`;
     // console.log('Attempting to send email to:', user.email);
     //console.log('Verification URL:', verificationUrl);
 
     // Send verification email
     // await sendVerificationEmail(user.email, verificationToken);
-    await sendEmail({
-      to: email,
-      subject: 'Verify Your Email',
-      html: `
-        <h1>Verify Your Email</h1>
-        <p>Please click the link below to verify your email address:</p>
-        <a href="${verificationUrl}">${verificationUrl}</a>
-        <p>This link will expire in 24 hours.</p>
-      `
-    });
+    await emailService.sendTemplatedEmail(
+      email,
+      'verifyEmail',
+      { verificationUrl: `${environment.app.frontend}/verify-email/${verificationToken}` }
+    );
+
     console.log('Email sent successfully');
 
     res.status(201).json({ 
@@ -216,20 +211,13 @@ export const sendVerificationEmail = async (req: AuthRequest, res: Response, nex
     req.user.verificationTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
     await req.user.save();
 
-    const verificationUrl = `${environment.app.frontend}/verify-email/${verificationToken}`;
-
     const decryptedEmail = await req.user.getDecryptedEmail();
-    
-    await sendEmail({
-      to: decryptedEmail,
-      subject: 'Verify Your Email',
-      html: `
-        <h1>Verify Your Email</h1>
-        <p>Please click the link below to verify your email address:</p>
-        <a href="${verificationUrl}">${verificationUrl}</a>
-        <p>This link will expire in 24 hours.</p>
-      `
-    });
+
+    await emailService.sendTemplatedEmail(
+      decryptedEmail,
+      'verifyEmail',
+      { verificationUrl: `${environment.app.frontend}/verify-email/${verificationToken}` }
+    );
 
     res.json({ message: 'Verification email sent' });
   } catch (error) {
@@ -320,19 +308,12 @@ export const requestPasswordReset = async (req: RequestPasswordResetRequest, res
     user.resetPasswordToken = resetToken;
     user.resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
     await user.save();
-
-    const resetUrl = `${environment.app.frontend}/reset-password/${resetToken}`;
     
-    await sendEmail({
-      to: email,
-      subject: 'Password Reset Request',
-      html: `
-        <h1>Password Reset Request</h1>
-        <p>Please click the link below to reset your password:</p>
-        <a href="${resetUrl}">${resetUrl}</a>
-        <p>This link will expire in 1 hour.</p>
-      `
-    });
+    await emailService.sendTemplatedEmail(
+      email,
+      'passwordReset',
+      { verificationUrl: `${environment.app.frontend}/reset-password/${resetToken}` }
+    );
 
     logger.info('Requested password reset for', { email: email });
     res.json({ message: 'Password reset email sent' });
@@ -427,22 +408,17 @@ export const createMagicLink = async (req: Request, res: Response, next: NextFun
       await user.save();
     }
 
-    const Token = crypto.randomBytes(20).toString('hex');
-    user.oneTimeLoginToken = Token;
+    const magicToken = crypto.randomBytes(20).toString('hex');
+    user.oneTimeLoginToken = magicToken;
     user.oneTimeLoginExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
     await user.save();
 
-    const magicLink = `${environment.app.frontend}/magic-login/${Token}`;
-    await sendEmail({
-      to: email,
-      subject: 'Your Magic Login Link',
-      html: `
-        <h1>Magic Login Link</h1>
-        <p>Click the link below to log in:</p>
-        <a href="${magicLink}">${magicLink}</a>
-        <p>This link will expire in 15 minutes.</p>
-      `
-    });
+    await emailService.sendTemplatedEmail(
+      email,
+      'magicLink',
+      { verificationUrl: `${environment.app.frontend}/magic-login/${magicToken}` }
+    );
+
 
     logger.info('Magic link created for', { email });
     res.json({ message: 'Magic link sent to your email' });

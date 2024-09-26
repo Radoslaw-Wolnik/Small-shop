@@ -5,6 +5,9 @@ import Product from '../models/product.model';
 import { NotFoundError, UnauthorizedError, BadRequestError, InternalServerError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 import { generateMagicToken } from '../utils/auth.util';
+import { emailService } from '../services/email.service';
+import { formatOrderDetails } from '../utils/order.util';
+import mongoose from 'mongoose';
 
 export const createOrder = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const session = await mongoose.startSession();
@@ -17,6 +20,7 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
     if (!user && email) {
       // Create or find anonymous user
       user = await User.findOne({ email, isAnonymous: true }) || new User({ email, isAnonymous: true });
+      user.email = email;
       user.oneTimeLoginToken, user.oneTimeLoginExpires = await generateMagicToken();
       await user.save();
 
@@ -44,7 +48,7 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
     }
 
     const orderData = {
-      user: req.user ? req.user._id : null,
+      user: req.user,
       products,
       totalAmount,
       shippingAddress,
@@ -59,6 +63,16 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
 
     await session.commitTransaction();
     session.endSession();
+
+    await emailService.sendTemplatedEmail(
+      user.email,
+      'orderConfirmation',
+      {
+        orderId: order._id,
+        totalAmount: order.totalAmount,
+        orderDetails: formatOrderDetails(order) // You'll need to implement this function
+      }
+    );
 
     logger.info('Order created', { orderId: order._id, userId: req.user?._id });
     res.status(201).json(order);

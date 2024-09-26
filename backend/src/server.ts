@@ -19,6 +19,10 @@ const startServer = async () => {
     const connectionTime = Date.now() - startTime;
     logger.info('Connected to database', { connectionTimeMs: connectionTime });
 
+    // Initialize email templates
+    await environment.email.templateManager.loadTemplates();
+    logger.info('Email templates loaded');
+
     // Initialize cron jobs
     initializeSchedules();
     logger.info('Cron jobs initialized');

@@ -1,10 +1,10 @@
 import { Response, NextFunction } from 'express';
 import User from '../models/user.model';
-import EmailTemplate from '../models/email-template.model';
 import Product from '../models/product.model';
 import { NotFoundError, BadRequestError, InternalServerError, ValidationError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 import { sanitizeData } from '../utils/sanitize.util';
+import templateManager from '../utils/email-templates.util';
 
 export const getAdmins = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -63,27 +63,6 @@ export const addAdmin = async (req: AuthRequest, res: Response, next: NextFuncti
   }
 };
 
-export const updateEmailTemplate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { id } = req.params;
-    const { name, subject, body, variables } = req.body;
-
-    const updatedTemplate = await EmailTemplate.findByIdAndUpdate(id, 
-      { name, subject, body, variables },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedTemplate) {
-      throw new NotFoundError('Email template');
-    }
-
-    logger.info('Email template updated', { templateId: id, updatedBy: req.user?.id });
-    res.json(updatedTemplate);
-  } catch (error) {
-    next(error instanceof NotFoundError ? error : new InternalServerError('Error updating email template'));
-  }
-};
-
 export const deleteProduct = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
@@ -136,5 +115,26 @@ export const updateSensitiveData = async (req: AuthRequest, res: Response, next:
     res.json({ message: 'Sensitive data updated successfully' });
   } catch (error) {
     next(error instanceof NotFoundError ? error : new InternalServerError('Error updating sensitive data'));
+  }
+};
+
+
+export const getEmailTemplates = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const templateNames = templateManager.getAllTemplateNames();
+    res.json(templateNames);
+  } catch (error) {
+    next(new InternalServerError('Error fetching email templates'));
+  }
+};
+
+export const updateEmailTemplate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { name } = req.params;
+    const updates = req.body;
+    await templateManager.updateTemplate(name, updates);
+    res.json({ message: 'Email template updated successfully' });
+  } catch (error) {
+    next(error instanceof NotFoundError ? error : new InternalServerError('Error updating email template'));
   }
 };

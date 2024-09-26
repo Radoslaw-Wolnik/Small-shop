@@ -38,6 +38,7 @@
  - [ ] copy and modify exsisting product insted of product template
  - [ ] make sendEmail(email-template, data-nneded) or sendVerificationemail, sendSth email
  - [ ] in prodyct schema im not sure if reserve and relese inventory functions work
+ - [ ] should verification email be send after the user registers with magic link?
 
 Suggestions to improve:
  - Implement caching for frequently accessed data
