@@ -33,5 +33,12 @@
     "htmlBody": "<h1>Order Confirmation</h1><p>Thank you for your order!</p><p>Order ID: {{orderId}}</p><p>Total Amount: {{totalAmount}}</p><h2>Order Details:</h2>{{orderDetails}}",
     "textBody": "Order Confirmation\n\nThank you for your order!\n\nOrder ID: {{orderId}}\nTotal Amount: {{totalAmount}}\n\nOrder Details:\n{{orderDetails}}",
     "variables": ["orderId", "totalAmount", "orderDetails"]
+  },
+  "accountDeactivation": {
+    "name": "accountDeactivation",
+    "subject": "Account Deactivation Request",
+    "htmlBody": "<h1>Account Deactivation Request</h1><p>You have requested to deactivate your account. If you wish to proceed, please click the link below:</p><a href=\"{{deactivationUrl}}\">{{deactivationUrl}}</a><p>This link will expire in 24 hours. If you did not request this, please ignore this email and ensure your account is secure.</p>",
+    "textBody": "Account Deactivation Request\n\nYou have requested to deactivate your account. If you wish to proceed, please click the link below:\n\n{{deactivationUrl}}\n\nThis link will expire in 24 hours. If you did not request this, please ignore this email and ensure your account is secure.",
+    "variables": ["deactivationUrl"]
   }
 }

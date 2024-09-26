@@ -455,3 +455,54 @@ export const loginWithMagicLink = async (req: Request, res: Response, next: Next
     next(error);
   }
 };
+
+export const requestAccountDeactivation = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (!req.user) {
+      throw new BadRequestError('User not authenticated');
+    }
+
+    const deactivationToken = crypto.randomBytes(20).toString('hex');
+    req.user.deactivationToken = deactivationToken;
+    req.user.deactivationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    await req.user.save();
+
+    const decryptedEmail = await req.user.getDecryptedEmail();
+
+    await environment.email.service?.sendTemplatedEmail(
+      decryptedEmail,
+      'accountDeactivation',
+      { deactivationUrl: `${environment.app.frontend}/deactivate-account/${deactivationToken}` }
+    );
+
+    logger.info('Account deactivation requested', { userId: req.user._id });
+    res.json({ message: 'Account deactivation email sent' });
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error requesting account deactivation'));
+  }
+};
+
+export const deactivateAccount = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { token } = req.params;
+
+    const user = await User.findOne({
+      deactivationToken: token,
+      deactivationExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      throw new BadRequestError('Invalid or expired deactivation token');
+    }
+
+    user.deactivated = new Date();
+    user.deactivationToken = undefined;
+    user.deactivationExpires = undefined;
+    await user.save();
+
+    logger.info('Account deactivated', { userId: user._id });
+    res.json({ message: 'Account deactivated successfully' });
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error deactivating account'));
+  }
+};
