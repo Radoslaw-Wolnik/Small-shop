@@ -7,38 +7,30 @@
 - Anonymous : folks that buy without account or dispiute via magic link
 
 ## ToDo: 
- - [ ] Actual SEO things (product slug and category should be masde using npm slug) (and also global site-settings)
- - [ ] Api insted of placeholders in services (payment and shipment)
+ - [ ] // add middleware to attach - upload things to messages and disputes also to delete product photos and delete a variant from product properly incoporate in exsisting upload.middleware
 
- - [ ] Admin controleer -> del product (shouldnt it be in product controller), change email template (should i make seperate controller for that? and imort from there in adfmin routes)
-
- - [ ] Added last time active to user schema - make usage of it in login
- - [ ] // add middleware to attach - upload things to messages and disputes also to delete product photos and delete a variant from product
-
- - [ ] update inventory logic and inventory management
-
- - [ ] delete category only if there are no products in the category
- - [ ] insted of this make a compare or sth in the schemas or sth better tbh this is embarassing 
- const slug = slugify(name, { lower: true, strict: true });
-    const existingProduct = await Product.findOne({ 'seo.slug': slug });
-    if (existingProduct) {
-      throw new BadRequestError('A product with this name already exists');
-    }
+ - [ ] Admin controleer -> del product (shouldnt it be in product controller) and then as admin route?,
  - [ ] better update sensitive data ino admin controller 
- - [ ] better email-template (categories or labels and also make usage of them across aplication) and not schema but insted json in resources dir
- - [ ] create deactivation account token request fro deactivationg account (in auth.controller) deactivate account 1. auth create deactivation token 2. user.deactivate my acc 
- - [ ] order controller fix 
+
  - [ ] whats going on with the process payment in payment controller ? Is it just unneded Also are the tokens used in verify payment
  - [ ] in shipment controller the token expired error add at the last function
- - [ ] idk if use product template is good in product template controller
+
+ - [ ] delete category only if there are no products in the category
+ - [ ] variant controller - remove variant only if its not used, alsio in product make remove variant that also deletes the photos (mby not sure mby additional delete photo)
+
  - [ ] check promotion controller
  - [ ] make tag model and properly use it and check the controller and routes
- - [ ] variant controller - remove variant only if its not used, alsio in product make remove variant that also deletes the photos (mby not sure mby additional delete photo)
- - [ ] make routes for siter settings
- - [ ] copy and modify exsisting product insted of product template
- - [ ] make sendEmail(email-template, data-nneded) or sendVerificationemail, sendSth email
- - [ ] in prodyct schema im not sure if reserve and relese inventory functions work
- - [ ] should verification email be send after the user registers with magic link?
+
+ - [ ] make routes for site settings
+ - [ ] update routes for making orders (seperate anonymous and logged in)
+ - [ ] route for copied product and in general chack if all functions in controllers have its corresponding routes
+
+
+## ToDo later mby:
+ - [ ] Actual SEO things (im not sure if its correct with slugify) (and also global site-settings)
+
+ - [ ] comprehensive tests with edge cases to check if everythin (or anything) works
+ - [ ] will emails work? :'(-+=||=+-)':
 
 Suggestions to improve:
  - Implement caching for frequently accessed data
