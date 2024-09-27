@@ -1,4 +1,4 @@
-// src/services/shipping/paczkomaty-shipping.service.ts
+// src/services/shipping/inPost-shipping.service.ts
 
 import axios from 'axios';
 import { IOrderDocument } from '../../models/order.model';
@@ -8,7 +8,7 @@ import environment from '../../config/environment';
 const INPOST_API_URL = environment.shipment.inpostApiUrl;
 const INPOST_API_KEY = environment.shipment.inpostApiKey;
 
-export async function generatePaczkomatyShippingLabel(order: IOrderDocument): Promise<{ url: string; trackingNumber: string }> {
+export async function generateInPostShippingLabel(order: IOrderDocument): Promise<{ url: string; trackingNumber: string }> {
   try {
     const response = await axios.post(`${INPOST_API_URL}/shipments`, {
       sender: {
@@ -66,7 +66,7 @@ export async function generatePaczkomatyShippingLabel(order: IOrderDocument): Pr
   }
 }
 
-export async function trackPaczkomatyShipment(trackingNumber: string): Promise<any> {
+export async function trackInPostShipment(trackingNumber: string): Promise<any> {
   try {
     const response = await axios.get(`${INPOST_API_URL}/tracking/${trackingNumber}`, {
       headers: {
