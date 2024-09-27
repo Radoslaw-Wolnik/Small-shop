@@ -10,10 +10,9 @@
 
 // dispute.routes.ts
 import express from 'express';
-import { authenticateJWT } from '../middleware/auth.middleware';
+import { authenticateJWT, handleAnonymousAuth } from '../middleware/auth.middleware';
 import { isOwner } from '../middleware/role.middleware';
 import {
-    createDisputeWithToken,
     getDisputeDetails,
     listDisputes,
     createDispute,
@@ -26,21 +25,19 @@ import { uploadDisputeAttachments } from '../middleware/upload.middleware';
 
 const router = express.Router();
 
-router.post('/:orderId/:token', createDisputeWithToken);
-router.get('/:id/:token', getDisputeDetails);
+router.post('/:orderId', handleAnonymousAuth, createDispute);
+router.post('/upload/:orderId', handleAnonymousAuth, multerErrorHandler(uploadDisputeAttachments), createDispute);
+router.get('/:id', handleAnonymousAuth, getDisputeDetails);
 
-
-router.post('/upload/:orderId/:token', multerErrorHandler(uploadDisputeAttachments), createDisputeWithToken);
-router.post('/upload/:id', authenticateJWT, multerErrorHandler(uploadDisputeAttachments), addAttachmentToDispute);
-
-
+// for logged in users
 router.use(authenticateJWT);
 router.get('/:id', getDisputeDetails);
+router.post('/:orderId', createDispute);
+router.post('/upload/:id', multerErrorHandler(uploadDisputeAttachments), addAttachmentToDispute);
 // Ensure all routes are protected and require owner privileges
 router.use(isOwner); // idk if its enough or if do authenticatetoken agin
 router.get('/', listDisputes);
-// create-update-delete
-router.post('/:orderId', createDispute);
+// update-delete
 router.put('/:id/status', updateDisputeStatus);
 router.delete('/:id', deleteDispute); // can be automatic after its closed and some time passed
 

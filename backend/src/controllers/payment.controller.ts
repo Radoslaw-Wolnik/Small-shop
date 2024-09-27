@@ -17,7 +17,11 @@ export const initializePayment = async (req: AuthRequest, res: Response, next: N
       throw new NotFoundError('Order not found');
     }
 
-    let paymentResult: { success: boolean; transactionId: string; paymentUrl?: string };
+    if (order.user.toString() !== req.user!._id.toString()) {
+      throw new UnauthorizedError('Not authorized to pay for this order');
+    }
+
+    let paymentResult: PaymentInitializationResult;
     switch (gateway) {
       case 'paypal':
         paymentResult = await initializePayPalPayment(order);
@@ -125,6 +129,10 @@ export const verifyPayment = async (req: AuthRequest, res: Response, next: NextF
 
     if (!order.transactionId) {
       throw new BadRequestError('No transaction ID found for this order');
+    }
+
+    if (order.user.toString() !== req.user!._id.toString()) {
+      throw new UnauthorizedError('Not authorized to verify payment for this order');
     }
 
     let verificationResult: PaymentVerificationResult;

@@ -3,30 +3,46 @@ import Dispute from '../models/dispiute-order.model';
 import Order from '../models/order.model';
 import { NotFoundError, UnauthorizedError, BadRequestError, InternalServerError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
+import environment from '../config/environment';
+import { generateAnonymousToken } from '../middleware/auth.middleware';
 
-export const createDisputeWithToken = async (req: Request, res: Response, next: NextFunction) => {
+export const createDispute = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const { orderId, token } = req.params;
+    const { orderId } = req.params;
     const { reason, description } = req.body;
 
-    const order = await Order.findOne({ _id: orderId, magicLink: token });
+    const order = await Order.findById(orderId);
     if (!order) {
-      throw new NotFoundError('Order not found or token is invalid');
+      throw new NotFoundError('Order not found');
+    }
+
+    if (order.user.toString() !== req.user!._id.toString()) {
+      throw new UnauthorizedError('Not authorized to create a dispute for this order');
     }
 
     const dispute = new Dispute({
       order: orderId,
-      user: order.user,
+      user: req.user!._id,
       reason,
-      description,
-      attachments: req.body.attachments || []
+      description
     });
 
     await dispute.save();
-    order.status = 'disputed';
-    await order.save();
 
-    logger.info('Dispute created with token', { disputeId: dispute._id, orderId });
+    const token = generateAnonymousToken(req.user!);
+    const userEmail = await req.user!.getDecryptedEmail();
+
+    await environment.email.service?.sendTemplatedEmail(
+      userEmail,
+      'disputeConfirmation',
+      {
+        orderId: orderId,
+        disputeId: dispute.id,
+        frontendUrl: environment.app.frontend,
+        token: token
+      }
+    );
+
     res.status(201).json(dispute);
   } catch (error) {
     next(error);
@@ -42,11 +58,12 @@ export const getDisputeDetails = async (req: AuthRequest, res: Response, next: N
       throw new NotFoundError('Dispute');
     }
 
-    if (req.user && dispute.user.toString() !== req.user.id && req.user.role !== 'owner') {
+    // or insted of doing req.user! you can just at begginig make if for req.user
+    if (dispute.user.toString() !== req.user!._id.toString() && req.user!.role !== 'owner' ) {
       throw new UnauthorizedError('Not authorized to view this dispute');
     }
 
-    logger.info('Dispute details retrieved', { disputeId: id, userId: req.user?.id });
+    logger.info('Dispute details retrieved', { disputeId: id, userId: req.user!.id });
     res.json(dispute);
   } catch (error) {
     next(error);

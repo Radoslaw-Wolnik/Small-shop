@@ -1,6 +1,6 @@
 // src/controllers/shipping.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import { CustomError, NotFoundError, InternalServerError, BadRequestError, ExpiredTokenError } from '../utils/custom-errors.util';
+import { CustomError, NotFoundError, InternalServerError, BadRequestError, ExpiredTokenError, UnauthorizedError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 import Order from '../models/order.model';
 // Import shipping provider services
@@ -58,6 +58,10 @@ export const trackShipment = async (req: AuthRequest, res: Response, next: NextF
       throw new NotFoundError('Order not found');
     }
 
+    if (order.user.toString() !== req.user!._id.toString()) {
+      throw new UnauthorizedError('Not authorized to track this shipment');
+    }
+
     if (!order.trackingNumber || !order.shippingProvider) {
       throw new BadRequestError('Shipping information not available');
     }
@@ -104,44 +108,5 @@ export const updateShippingStatus = async (req: AuthRequest, res: Response, next
     res.json({ message: 'Shipping status updated successfully' });
   } catch (error) {
     next(error instanceof CustomError ? error : new InternalServerError('Error updating shipping status'));
-  }
-};
-
-// tracking info for not logge din users (or just log in using the one time link to check im not sure whats the best aproach)
-export const TrackShippmentAnonymous = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    const { token, trackingNumber } = req.params;
-
-    const order = await Order.findOne({ trackingNumber, anonToken: token });
-    if (!order) {
-      throw new NotFoundError('Order not found or invalid token');
-    }
-
-    // Check if the token has expired
-    if (order.anonTokenExpires && order.anonTokenExpires < new Date()) {
-      throw new ExpiredTokenError('Tracking token has expired');
-    }
-
-    let trackingInfo;
-    switch (order.shippingProvider) {
-      case 'poczta-polska':
-        trackingInfo = await trackPocztaPolskaShipment(trackingNumber);
-        break;
-      case 'dhl':
-        trackingInfo = await trackDHLShipment(trackingNumber);
-        break;
-      case 'amazon':
-        trackingInfo = await trackAmazonShipment(trackingNumber);
-        break;
-      case 'inpost':
-        trackingInfo = await trackInPostShipment(trackingNumber);
-        break;
-      default:
-        throw new BadRequestError('Invalid shipping provider');
-    }
-
-    res.json(trackingInfo);
-  } catch (error) {
-    next(error);
   }
 };

@@ -1,6 +1,6 @@
 // src/routes/order.routes.ts
 import express from 'express';
-import { authenticateJWT } from '../middleware/auth.middleware';
+import { authenticateJWT, handleAnonymousAuth } from '../middleware/auth.middleware';
 import { isOwner } from '../middleware/role.middleware';
 import { 
   createOrder, 
@@ -19,19 +19,19 @@ import {
 const router = express.Router();
 
 // not logged in new order
-router.post('/anon/', createOrder);
+router.post('/', createOrder);
 // token from email for not logged in
-router.get('/:orderId/:token', getOrderDetails);
-router.put('/cancel/:orderId/:token', cancelOrder);
-router.put('/received/:orderId/:token', authenticateJWT, markOrderAsReceived);
+router.get('/:id', handleAnonymousAuth, getOrderDetails);
+router.put('/:id/cancel', handleAnonymousAuth, cancelOrder);
+router.put('/:id/recived', handleAnonymousAuth, markOrderAsReceived);
 
 
 // Ensure all routes are protected and require user privileges
 router.use(authenticateJWT);
 router.post('/', createOrder);
 router.get('/:id', getOrderDetails);
-router.put('/:orderId/cancel', cancelOrder);
-router.put('/:orderId/received', markOrderAsReceived);
+router.put('/:id/cancel', cancelOrder);
+router.put('/:id/received', markOrderAsReceived);
 router.get('/', getUserOrderHistory);
 
 
@@ -39,7 +39,7 @@ router.get('/', getUserOrderHistory);
 router.use(isOwner);
 router.get('/', getOrders);
 router.put('/:id/status', updateOrderStatus);
-router.put('/:orderId/deny', denyOrder);
+router.put('/:id/deny', denyOrder);
 router.get('/statistics', getOrderStatistics);
 router.get('/search', searchOrders);
 

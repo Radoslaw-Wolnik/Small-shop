@@ -2,6 +2,8 @@ import nodemailer from 'nodemailer';
 import environment from '../config/environment';
 import templateManager from '../utils/email-templates.util';
 import logger from '../utils/logger.util';
+import { IUserDocument } from '../models/user.model';
+import { generateAnonymousToken } from '../middleware/auth.middleware';
 
 interface EmailOptions {
   to: string;
@@ -50,8 +52,14 @@ export class EmailService {
     }
   }
 
-  async sendTemplatedEmail(to: string, templateName: string, variables: Record<string, any>): Promise<void> {
+  async sendTemplatedEmail(to: string, templateName: string, variables: Record<string, any>, user?: IUserDocument): Promise<void> {
     try {
+      let token = '';
+      if (user && user.isAnonymous) {
+        token = await generateAnonymousToken(user);
+        variables.token = token;
+      }
+
       const renderedTemplate = await templateManager.renderTemplate(templateName, variables);
       await this.sendEmail({
         to,
@@ -63,7 +71,6 @@ export class EmailService {
     }
   }
 
-  // New method to verify connection
   async verifyConnection(): Promise<void> {
     try {
       await this.transporter.verify();

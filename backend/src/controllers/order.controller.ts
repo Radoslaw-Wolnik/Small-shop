@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import Order, { IOrderDocument } from '../models/order.model';
-import User from '../models/user.model';
+import User, { IUserDocument } from '../models/user.model';
 import Product from '../models/product.model';
 import { NotFoundError, UnauthorizedError, BadRequestError, InternalServerError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
@@ -8,6 +8,8 @@ import { formatOrderDetails } from '../utils/order.util';
 import mongoose, { ClientSession } from 'mongoose';
 import environment from '../config/environment';
 import crypto from 'crypto';
+import { generateAnonymousToken } from '../middleware/auth.middleware';
+
 
 interface OrderData {
   user: string;
@@ -33,7 +35,6 @@ const createOrderCore = async (orderData: OrderData, session: ClientSession): Pr
       throw new NotFoundError(`Product with id ${item.product}`);
     }
     
-    // Check inventory for specific variant combination
     const variantKey = Object.entries(item.selectedVariants)
       .map(([key, value]) => `${key}:${value}`)
       .join('_');
@@ -43,7 +44,6 @@ const createOrderCore = async (orderData: OrderData, session: ClientSession): Pr
       throw new BadRequestError(`Insufficient inventory for product ${product.name} with selected variants`);
     }
     
-    // Calculate price based on base price and variant prices
     let itemPrice = product.basePrice;
     for (const [variantName, optionName] of Object.entries(item.selectedVariants)) {
       const variant = product.variants.find(v => v.variant.toString() === variantName);
@@ -57,7 +57,6 @@ const createOrderCore = async (orderData: OrderData, session: ClientSession): Pr
     
     totalAmount += itemPrice * item.quantity;
     
-    // Update inventory
     inventoryItem.stock -= item.quantity;
     await product.save({ session });
   }
@@ -69,14 +68,37 @@ const createOrderCore = async (orderData: OrderData, session: ClientSession): Pr
   return order;
 };
 
-export const createOrderLoggedIn = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const createOrder = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { products, shippingAddress, shippingMethod, paymentMethod } = req.body;
+    const { products, shippingAddress, shippingMethod, paymentMethod, email } = req.body;
 
-    const orderData = {
-      user: req.user!._id.toString(),
+    let user: IUserDocument | null = (req as AuthRequest).user || null; // req.user works too
+    let isAnonymous = false;
+
+    if (!user) {
+      // Handle anonymous user
+      user = await User.findOne({ email, isAnonymous: true }).session(session);
+      if (!user) {
+        user = new User({ email, isAnonymous: true });
+        const token = crypto.randomBytes(20).toString('hex');
+        const expires = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 24hrs * 3
+        user.oneTimeLoginToken = token;
+        user.oneTimeLoginExpires = expires;
+        await user.save({ session });
+
+        await environment.email.service?.sendTemplatedEmail(
+          email,
+          'magicLink',
+          { verificationUrl: `${environment.app.frontend}/magic-login/${token}` }
+        );
+      }
+      isAnonymous = true;
+    }
+
+    const orderData: OrderData = {
+      user: user._id.toString(),
       products,
       shippingAddress,
       shippingMethod,
@@ -84,86 +106,36 @@ export const createOrderLoggedIn = async (req: AuthRequest, res: Response, next:
       status: 'pending'
     };
 
-    const order = await createOrderCore(orderData, session);
-
-    await session.commitTransaction();
-    session.endSession();
-
-    await environment.email.service?.sendTemplatedEmail(
-      req.user!.email,
-      'orderConfirmation',
-      {
-        orderId: order._id,
-        totalAmount: order.totalAmount,
-        orderDetails: formatOrderDetails(order)
-      }
-    );
-
-    logger.info('Order created', { orderId: order._id, userId: req.user!._id });
-    res.status(201).json(order);
-  } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
-    next(error);
-  }
-};
-
-export const createOrderAnonymous = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  try {
-    const { products, shippingAddress, shippingMethod, paymentMethod, email } = req.body;
-
-    // Create or find anonymous user
-    let user = await User.findOne({ email, isAnonymous: true }).session(session);
-    if (!user) {
-      user = new User({ email, isAnonymous: true });
-      const token = crypto.randomBytes(20).toString('hex');
-      const expires = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 24hrs * 3
-      user.oneTimeLoginToken = token;
-      user.oneTimeLoginExpires = expires;
-      await user.save({ session });
-
-      // Send magic link email
-      await environment.email.service?.sendTemplatedEmail(
-        email,
-        'magicLink',
-        { verificationUrl: `${environment.app.frontend}/magic-login/${token}` }
-      );
+    if (isAnonymous) {
+      orderData.anonToken = crypto.randomBytes(20).toString('hex');
+      orderData.anonTokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
     }
 
-    const orderData = {
-      user: user._id.toString(),
-      products,
-      shippingAddress,
-      shippingMethod,
-      paymentMethod,
-      status: 'pending',
-      anonToken: crypto.randomBytes(20).toString('hex'),
-      anonTokenExpires: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
-    };
-
     const order = await createOrderCore(orderData, session);
 
     await session.commitTransaction();
     session.endSession();
 
+    const anonymousToken = isAnonymous ? generateAnonymousToken(user) : undefined;
+
     await environment.email.service?.sendTemplatedEmail(
-      email,
+      user.email,
       'orderConfirmation',
       {
         orderId: order._id,
         totalAmount: order.totalAmount,
         orderDetails: formatOrderDetails(order),
-        anonToken: order.anonToken
-      }
+        frontendUrl: environment.app.frontend,
+        token: anonymousToken
+      },
+      user
     );
 
-    logger.info('Anonymous order created', { orderId: order._id, email });
+    logger.info('Order created', { orderId: order._id, userId: user._id, isAnonymous });
     res.status(201).json({ 
-      message: 'Order created successfully. Check your email for order details and login link.',
+      message: 'Order created successfully. Check your email for order details.',
       orderId: order._id,
-      anonToken: order.anonToken
+      token: anonymousToken
     });
   } catch (error) {
     await session.abortTransaction();
@@ -175,22 +147,21 @@ export const createOrderAnonymous = async (req: Request, res: Response, next: Ne
 
 export const getOrderDetails = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { orderId, token } = req.params;
-    let order;
+    const { id } = req.params;
+    const order = await Order.findById(id);
 
-    if (token) {
-      // For anonymous users
-      order = await Order.findOne({ _id: orderId, magicLink: token, magicLinkExpires: { $gt: new Date() } });
-    } else if (req.user) {
-      // For authenticated users
-      order = await Order.findOne({ _id: orderId, user: req.user._id });
+    if (!req.user){
+      throw new UnauthorizedError('No user attached to request');
     }
 
     if (!order) {
       throw new NotFoundError('Order');
     }
 
-    logger.info('Order details retrieved', { orderId, userId: req.user?._id });
+    if (order.user.toString() !== req.user._id.toString()) {
+      throw new UnauthorizedError('Not authorized to view this order');
+    }
+
     res.json(order);
   } catch (error) {
     next(error);
@@ -213,19 +184,19 @@ export const getUserOrderHistory = async (req: AuthRequest, res: Response, next:
 
 export const updateOrderStatus = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { orderId } = req.params;
+    const { id } = req.params;
     const { status } = req.body;
 
     if (req.user?.role !== 'owner' && req.user?.role !== 'admin') {
       throw new UnauthorizedError('Not authorized to update order status');
     }
 
-    const order = await Order.findByIdAndUpdate(orderId, { status }, { new: true });
+    const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
     if (!order) {
       throw new NotFoundError('Order');
     }
 
-    logger.info('Order status updated', { orderId, status, updatedBy: req.user._id });
+    logger.info('Order status updated', { id, status, updatedBy: req.user._id });
     res.json(order);
   } catch (error) {
     next(error);
@@ -236,19 +207,15 @@ export const cancelOrder = async (req: AuthRequest, res: Response, next: NextFun
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { orderId, token } = req.params;
-    let order;
-
-    if (token) {
-      // For anonymous users
-      order = await Order.findOne({ _id: orderId, magicLink: token, magicLinkExpires: { $gt: new Date() } });
-    } else if (req.user) {
-      // For authenticated users
-      order = await Order.findOne({ _id: orderId, user: req.user._id });
-    }
+    const { id } = req.params;
+    const order = await Order.findById(id);
 
     if (!order) {
       throw new NotFoundError('Order');
+    }
+
+    if (order.user.toString() !== req.user!._id.toString()) {
+      throw new UnauthorizedError('Not authorized to cancel this order');
     }
 
     if (!['pending', 'processing'].includes(order.status)) {
@@ -274,7 +241,7 @@ export const cancelOrder = async (req: AuthRequest, res: Response, next: NextFun
     order.status = 'cancelled';
     await order.save();
 
-    logger.info('Order cancelled', { orderId, userId: req.user?._id });
+    logger.info('Order cancelled', { id, userId: req.user!._id });
     res.json({ message: 'Order cancelled successfully' });
   } catch (error) {
     await session.abortTransaction();
