@@ -7,26 +7,26 @@
 - Anonymous : folks that buy without account or dispiute via magic link
 
 ## ToDo: 
- - [ ] // add middleware to attach - upload things to messages and disputes also to delete product photos and delete a variant from product properly incoporate in exsisting upload.middleware
+ - [ ] should there be an inventory schema and controller for inventory maangement (there is quite a mess with it becouse variants can affect the inventroy status)
 
- - [ ] Admin controleer -> del product (shouldnt it be in product controller) and then as admin route?,
- - [ ] better update sensitive data ino admin controller 
+ - [ ] Anything that user that is not reqistered do, treat as logged in anonymous user - using token logged in - and just treat as AuthRequest 
+ 
+ - [ ] for payment some key menagement system idk with Hardware Security Module (HSM)
+ - [ ] revise and improve payment and shipment services
+ - [ ] import { isAdmin } from '../middleware/role.middleware'; is it better to have sepret role middleware for this insted of having it in the auth.middleware ?
 
- - [ ] whats going on with the process payment in payment controller ? Is it just unneded Also are the tokens used in verify payment
- - [ ] in shipment controller the token expired error add at the last function
-
- - [ ] delete category only if there are no products in the category
- - [ ] variant controller - remove variant only if its not used, alsio in product make remove variant that also deletes the photos (mby not sure mby additional delete photo)
-
- - [ ] check promotion controller
- - [ ] make tag model and properly use it and check the controller and routes
-
- - [ ] make routes for site settings
  - [ ] update routes for making orders (seperate anonymous and logged in)
  - [ ] route for copied product and in general chack if all functions in controllers have its corresponding routes
 
+ - [ ] fix payment services (mostly problem with getting user data if needed from order.userID)
+ - [ ] fix shipment services - tbh idk what wrong in there (a lot)
 
 ## ToDo later mby:
+ - [ ] check promotion controller
+ - [ ] del product should be in bloated product controller insted of admin one (its there becouse the product is so bloated)
+ - [ ] if emailError should i eg not register user etc ? catch(emailError) {logger.error('Failed to send verification email', { error: emailError, userId: user._id });}
+
+
  - [ ] Actual SEO things (im not sure if its correct with slugify) (and also global site-settings)
 
  - [ ] comprehensive tests with edge cases to check if everythin (or anything) works
