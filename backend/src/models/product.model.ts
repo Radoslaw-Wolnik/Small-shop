@@ -7,7 +7,7 @@ export interface IProductDocument extends Document {
   name: string;
   description: string;
   category: Schema.Types.ObjectId;
-  tags: string[];
+  tags: Schema.Types.ObjectId[];
   basePrice: number;
   variants: {
     variant: Schema.Types.ObjectId;
@@ -62,7 +62,7 @@ const productSchema = new Schema<IProductDocument>({
   name: { type: String, required: true },
   description: { type: String, required: true },
   category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
-  tags: [{ type: String }],
+  tags: [{ type: Schema.Types.ObjectId, ref: 'Tag' }],
   basePrice: { type: Number, required: true },
   variants: [{
     variant: { type: Schema.Types.ObjectId, ref: 'Variant', required: true },

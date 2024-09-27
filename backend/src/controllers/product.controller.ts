@@ -4,6 +4,7 @@ import Product, { IProductDocument } from '../models/product.model';
 import Category from '../models/category.model';
 import Variant from '../models/variant.model';
 import Order from '../models/order.model';
+import Tag from '../models/tag.model';
 import { NotFoundError, BadRequestError, InternalServerError, UnauthorizedError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 
@@ -162,6 +163,55 @@ export const addVariant = async (req: AuthRequest, res: Response, next: NextFunc
   }
 };
 
+export const addTag = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { productId } = req.params;
+    const { tagId } = req.body;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new NotFoundError('Product');
+    }
+
+    const tag = await Tag.findById(tagId);
+    if (!tag) {
+      throw new NotFoundError('Tag');
+    }
+
+    if (!product.tags.includes(tag.id)) {
+      product.tags.push(tag.id);
+      await product.save();
+    }
+
+    logger.info('Tag added to product', { productId, tagId, updatedBy: req.user!.id });
+    res.json(product);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const removeTag = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { productId } = req.params;
+    const { tagId } = req.body;
+
+    const product = await Product.findByIdAndUpdate(
+      productId,
+      { $pull: { tags: tagId } },
+      { new: true }
+    );
+
+    if (!product) {
+      throw new NotFoundError('Product');
+    }
+
+    logger.info('Tag removed from product', { productId, tagId, updatedBy: req.user!.id });
+    res.json(product);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateInventory = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { productId } = req.params;
@@ -205,10 +255,10 @@ export const updateShippingDetails = async (req: AuthRequest, res: Response, nex
 export const getProductsByTags = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { tags } = req.query;
-    const tagArray = Array.isArray(tags) ? tags : [tags];
+    const tagIds = Array.isArray(tags) ? tags : [tags];
 
-    const products = await Product.find({ tags: { $in: tagArray } }).populate('category');
-    logger.info('Products retrieved by tags', { tags: tagArray, count: products.length });
+    const products = await Product.find({ tags: { $in: tagIds } }).populate('category tags');
+    logger.info('Products retrieved by tags', { tags: tagIds, count: products.length });
     res.json(products);
   } catch (error) {
     next(error);
@@ -243,49 +293,6 @@ export const getProductsByTagsAndCategory = async (req: Request, res: Response, 
   }
 };
 
-export const addTag = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  try {
-    const { productId } = req.params;
-    const { tag } = req.body;
-
-    const product = await Product.findByIdAndUpdate(
-      productId,
-      { $addToSet: { tags: tag } },
-      { new: true }
-    );
-
-    if (!product) {
-      throw new NotFoundError('Product');
-    }
-
-    logger.info('Tag added to product', { productId, tag, updatedBy: req.user!.id });
-    res.json(product);
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const removeTag = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  try {
-    const { productId } = req.params;
-    const { tag } = req.body;
-
-    const product = await Product.findByIdAndUpdate(
-      productId,
-      { $pull: { tags: tag } },
-      { new: true }
-    );
-
-    if (!product) {
-      throw new NotFoundError('Product');
-    }
-
-    logger.info('Tag removed from product', { productId, tag, updatedBy: req.user!.id });
-    res.json(product);
-  } catch (error) {
-    next(error);
-  }
-};
 
 export const updateVariantPhotos = async (req: AuthRequestWithFiles, res: Response, next: NextFunction) => {
   try {

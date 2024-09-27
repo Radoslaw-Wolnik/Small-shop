@@ -20,7 +20,7 @@ import {
   addTag,
   removeTag,
 
-  updateVariantPhotos
+  updateVariantPhotos,
   saveProductPhotos
 } from '../controllers/product.controller';
 import { uploadProductPhotos, } from '../middleware/upload.middleware';
