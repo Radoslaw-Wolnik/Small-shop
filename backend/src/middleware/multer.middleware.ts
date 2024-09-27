@@ -22,7 +22,8 @@ const storage = multer.diskStorage({
       const disputeId = req.params.disputeId || 'temp';
       uploadPath = `uploads/disputes/${disputeId}/`;
     } else if (file.fieldname === 'messagePhotos') {
-      uploadPath = 'uploads/messages/';
+      const userId = req.user?.id || 'anonymous';
+      uploadPath = `uploads/messages/${userId}/`;
     } else {
       return cb(new Error('Invalid field name'), '');
     }
