@@ -1,4 +1,7 @@
 import express, { Router } from 'express';
+import  { authenticateJWT } from '../middleware/auth.middleware';
+import { uploadProfilePicture } from '../middleware/upload.middleware';
+import { multerErrorHandler } from '../middleware/multer.middleware';
 import { 
   getUserOwnProfile, 
   saveProfilePicture, 
@@ -8,9 +11,7 @@ import {
   addShippingInfo,
   updateShippingInfo
 } from '../controllers/user.controller.js';
-import  { authenticateJWT } from '../middleware/auth.middleware';
-import { uploadProfilePicture } from '../middleware/upload.middleware';
-import { multerErrorHandler } from '../middleware/multer.middleware';
+
 
 const router: Router = express.Router();
 

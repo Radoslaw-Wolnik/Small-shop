@@ -1,6 +1,14 @@
 import express from 'express';
-import { getSiteSettings, updateSiteSettings, updateSEOSettings, updateSocialMediaLinks, updateLogo } from '../controllers/site-settings.controller';
-import { authenticateJWT, isAdmin } from '../middleware/auth.middleware';
+import { authenticateJWT } from '../middleware/auth.middleware';
+import { isAdmin } from '../middleware/role.middleware';
+import { 
+  getSiteSettings, 
+  updateSiteSettings, 
+  updateSEOSettings, 
+  updateSocialMediaLinks, 
+  updateLogo 
+} from '../controllers/site-settings.controller';
+
 
 
 const router = express.Router();

@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import jwt from 'jsonwebtoken';
 import User, { IUserDocument } from '../models/user.model';
 import RevokedToken from '../models/revoked-token.model';
-import AuthRequest from '../../types/global';
+import AuthRequest from '../types/global';
 import { generateToken, setTokenCookie, refreshToken as refreshAuthToken, generateShortLivedToken, setShortLivedTokenCookie } from '../middleware/auth.middleware';
 import environment from '../config/environment';
 

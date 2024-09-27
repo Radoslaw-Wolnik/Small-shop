@@ -12,8 +12,6 @@
  - [ ] Anything that user that is not reqistered do, treat as logged in anonymous user - using token logged in - and just treat as AuthRequest 
  
  - [ ] for payment some key menagement system idk with Hardware Security Module (HSM)
- - [ ] revise and improve payment and shipment services
- - [ ] import { isAdmin } from '../middleware/role.middleware'; is it better to have sepret role middleware for this insted of having it in the auth.middleware ?
 
  - [ ] update routes for making orders (seperate anonymous and logged in)
  - [ ] route for copied product and in general chack if all functions in controllers have its corresponding routes

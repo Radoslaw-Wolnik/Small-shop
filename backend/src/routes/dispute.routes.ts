@@ -10,7 +10,8 @@
 
 // dispute.routes.ts
 import express from 'express';
-import { authenticateJWT, isOwner } from '../middleware/auth.middleware';
+import { authenticateJWT } from '../middleware/auth.middleware';
+import { isOwner } from '../middleware/role.middleware';
 import {
     createDisputeWithToken,
     getDisputeDetails,

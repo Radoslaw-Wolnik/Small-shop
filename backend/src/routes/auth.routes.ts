@@ -1,5 +1,7 @@
 // src/routes/authRoutes.ts
 import express, { Router } from 'express';
+import { authenticateJWT, handlePostRegistrationAuth } from '../middleware/auth.middleware.js';
+import { isAdmin } from '../middleware/role.middleware';
 import { 
     register, 
     login, 
@@ -15,7 +17,7 @@ import {
     resetPassword,
     createOwner
 } from '../controllers/auth.controller.js';
-import { authenticateJWT, handlePostRegistrationAuth, isAdmin } from '../middleware/auth.middleware.js';
+
 
 const router: Router = express.Router();
 

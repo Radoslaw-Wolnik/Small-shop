@@ -1,7 +1,10 @@
 
 // src/routes/product.routes.ts (update only the relevant part)
 import express from 'express';
-import { authenticateJWT, isOwner } from '../middleware/auth.middleware';
+import { authenticateJWT } from '../middleware/auth.middleware';
+import { isOwner } from '../middleware/role.middleware';
+import { uploadProductPhotos, } from '../middleware/upload.middleware';
+import { multerErrorHandler } from '../middleware/multer.middleware';
 import {
   createProduct,
   updateProduct,
@@ -23,8 +26,7 @@ import {
   updateVariantPhotos,
   saveProductPhotos
 } from '../controllers/product.controller';
-import { uploadProductPhotos, } from '../middleware/upload.middleware';
-import { multerErrorHandler } from '../middleware/multer.middleware';
+
 
 const router = express.Router();
 

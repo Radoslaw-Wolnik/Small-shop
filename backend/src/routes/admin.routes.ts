@@ -1,6 +1,7 @@
 // routes/adminRoutes.ts
 import express, { Router } from 'express';
-import { authenticateJWT, isAdmin } from '../middleware/auth.middleware';
+import { authenticateJWT} from '../middleware/auth.middleware';
+import { isAdmin } from '../middleware/role.middleware';
 import {
   getAdmins,
   getAllUsers,
@@ -11,6 +12,7 @@ import {
   deleteInactiveUsers,
   updateConfiguration
 } from '../controllers/admin.controller';
+
 
 const router: Router = express.Router();
 

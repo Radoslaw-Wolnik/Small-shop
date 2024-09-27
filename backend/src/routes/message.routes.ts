@@ -1,14 +1,16 @@
 // src/routes/message.routes.ts
 import express from 'express';
+import { authenticateJWT } from '../middleware/auth.middleware';
+import { isOwner } from '../middleware/role.middleware';
+import { multerErrorHandler } from '../middleware/multer.middleware';
+import { uploadMessagePhotos } from '../middleware/upload.middleware';
 import { 
   createMessage, 
   getMessages, 
   markAsRead,
   addPhotosToMessage
  } from '../controllers/message.controller';
-import { authenticateJWT, isOwner } from '../middleware/auth.middleware';
-import { multerErrorHandler } from '../middleware/multer.middleware';
-import { uploadMessagePhotos } from '../middleware/upload.middleware';
+
 
 const router = express.Router();
 
