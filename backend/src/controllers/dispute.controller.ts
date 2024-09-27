@@ -18,7 +18,8 @@ export const createDisputeWithToken = async (req: Request, res: Response, next: 
       order: orderId,
       user: order.user,
       reason,
-      description
+      description,
+      attachments: req.body.attachments || []
     });
 
     await dispute.save();
@@ -99,6 +100,30 @@ export const deleteDispute = async (req: AuthRequest, res: Response, next: NextF
     await Dispute.findByIdAndDelete(id);
     logger.info('Dispute deleted', { disputeId: id, deletedBy: req.user?.id });
     res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};
+
+// not sure if ony AuthRequestWith File as it may be user that makes the dispute with token - unless we will always log in such user < -
+export const addAttachmentToDispute = async (req: AuthRequestWithFiles, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const dispute = await Dispute.findById(id);
+    if (!dispute) {
+      throw new NotFoundError('Dispute');
+    }
+    if (req.user && dispute.user.toString() !== req.user.id && req.user.role !== 'owner') {
+      throw new UnauthorizedError('Not authorized to update this dispute');
+    }
+    
+    if (req.body.attachments && req.body.attachments.length > 0) {
+      dispute.attachments.push(...req.body.attachments);
+      await dispute.save();
+    }
+
+    logger.info('Attachments added to dispute', { disputeId: id, userId: req.user?.id });
+    res.json(dispute);
   } catch (error) {
     next(error);
   }

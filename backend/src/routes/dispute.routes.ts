@@ -17,13 +17,21 @@ import {
     listDisputes,
     createDispute,
     updateDisputeStatus,
-    deleteDispute
+    deleteDispute,
+    addAttachmentToDispute
   } from '../controllers/dispute.controller';
+import { multerErrorHandler } from '../middleware/multer.middleware';
+import { uploadDisputeAttachments } from '../middleware/upload.middleware';
 
 const router = express.Router();
 
 router.post('/:orderId/:token', createDisputeWithToken);
 router.get('/:id/:token', getDisputeDetails);
+
+
+router.post('/upload/:orderId/:token', multerErrorHandler(uploadDisputeAttachments), createDisputeWithToken);
+router.post('/upload/:id', authenticateJWT, multerErrorHandler(uploadDisputeAttachments), addAttachmentToDispute);
+
 
 router.use(authenticateJWT);
 router.get('/:id', getDisputeDetails);
