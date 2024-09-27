@@ -9,31 +9,32 @@ const stripe = new Stripe(environment.payment.stripeSecretKey, {
   apiVersion: '2023-10-16', // Use the latest API version
 });
 
-export async function processStripePayment(order: IOrderDocument): Promise<{ success: boolean; transactionId: string }> {
+export async function processStripePayment(order: IOrderDocument): Promise<PaymentInitializationResult> {
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: Math.round(order.totalAmount * 100), // Stripe expects amounts in cents
       currency: 'usd', // Replace with your currency
       payment_method_types: ['card'],
-      metadata: { orderId: order._id.toString() }
+      metadata: { orderId: order.id.toString() }
     });
 
     return {
       success: true,
-      transactionId: paymentIntent.id
+      transactionId: paymentIntent.id,
+      paymentUrl: paymentIntent.next_action?.redirect_to_url?.url
     };
   } catch (error) {
     throw new PaymentError('Failed to process Stripe payment');
   }
 }
 
-export async function verifyStripePayment(transactionId: string): Promise<{ verified: boolean; amount: number }> {
+export async function verifyStripePayment(transactionId: string): Promise<PaymentVerificationResult> {
   try {
     const paymentIntent = await stripe.paymentIntents.retrieve(transactionId);
 
     return {
-      verified: paymentIntent.status === 'succeeded',
-      amount: paymentIntent.amount / 100 // Convert back from cents to dollars
+      success: paymentIntent.status === 'succeeded',
+      orderId: paymentIntent.metadata.orderId
     };
   } catch (error) {
     throw new PaymentError('Failed to verify Stripe payment');

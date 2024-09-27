@@ -20,7 +20,7 @@ async function getPayPalAccessToken() {
   return response.data.access_token;
 }
 
-export async function initializePayPalPayment(order: IOrderDocument): Promise<string> {
+export async function initializePayPalPayment(order: IOrderDocument): Promise<PaymentInitializationResult> {
   try {
     const accessToken = await getPayPalAccessToken();
     const response = await axios.post(`${PAYPAL_API_URL}/v2/checkout/orders`, {
@@ -30,7 +30,7 @@ export async function initializePayPalPayment(order: IOrderDocument): Promise<st
           currency_code: 'USD',
           value: order.totalAmount.toFixed(2)
         },
-        description: `Order ${order._id}`
+        description: `Order ${order.id}`
       }]
     }, {
       headers: {
@@ -40,13 +40,17 @@ export async function initializePayPalPayment(order: IOrderDocument): Promise<st
     });
 
     const approvalUrl = response.data.links.find((link: any) => link.rel === 'approve').href;
-    return approvalUrl;
+    return {
+      success: true,
+      transactionId: response.data.id,
+      paymentUrl: approvalUrl
+    };
   } catch (error) {
     throw new PaymentError('Failed to initialize PayPal payment');
   }
 }
 
-export async function verifyPayPalPayment(orderId: string): Promise<{ success: boolean; transactionId: string }> {
+export async function verifyPayPalPayment(orderId: string): Promise<PaymentVerificationResult> {
   try {
     const accessToken = await getPayPalAccessToken();
     const response = await axios.post(`${PAYPAL_API_URL}/v2/checkout/orders/${orderId}/capture`, {}, {
@@ -58,7 +62,7 @@ export async function verifyPayPalPayment(orderId: string): Promise<{ success: b
 
     return {
       success: response.data.status === 'COMPLETED',
-      transactionId: response.data.id
+      orderId: response.data.purchase_units[0].reference_id
     };
   } catch (error) {
     throw new PaymentError('Failed to verify PayPal payment');

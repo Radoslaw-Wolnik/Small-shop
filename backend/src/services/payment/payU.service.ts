@@ -25,14 +25,14 @@ function generatePayUSignature(payload: string) {
   return crypto.createHash('md5').update(payload + PAYU_MD5_KEY).digest('hex');
 }
 
-export async function initializePayUPayment(order: IOrderDocument): Promise<string> {
+export async function initializePayUPayment(order: IOrderDocument): Promise<PaymentInitializationResult> {
   try {
     const accessToken = await getPayUAccessToken();
     const orderData = {
       notifyUrl: `${environment.app.backend}/api/payments/callback/payu`,
       customerIp: '127.0.0.1', // Replace with actual customer IP
       merchantPosId: PAYU_POS_ID,
-      description: `Order ${order._id}`,
+      description: `Order ${order.id}`,
       currencyCode: 'PLN',
       totalAmount: Math.round(order.totalAmount * 100),
       buyer: {
@@ -56,13 +56,17 @@ export async function initializePayUPayment(order: IOrderDocument): Promise<stri
       }
     });
 
-    return response.data.redirectUri;
+    return {
+      success: true,
+      transactionId: response.data.orderId,
+      paymentUrl: response.data.redirectUri
+    };
   } catch (error) {
     throw new PaymentError('Failed to initialize PayU payment');
   }
 }
 
-export async function verifyPayUPayment(payload: any): Promise<boolean> {
+export async function verifyPayUPayment(payload: any): Promise<PaymentVerificationResult> {
   try {
     const { order, signature } = payload;
     const concatenatedOrder = `${order.orderId}|${order.extOrderId}|${order.orderCreateDate}|${order.notifyType}|${order.merchantPosId}|${order.description}|${order.amount}|${order.currencyCode}|${order.status}`;
@@ -72,7 +76,10 @@ export async function verifyPayUPayment(payload: any): Promise<boolean> {
       throw new PaymentError('Invalid signature');
     }
 
-    return order.status === 'COMPLETED';
+    return {
+      success: order.status === 'COMPLETED',
+      orderId: order.extOrderId
+    };
   } catch (error) {
     throw new PaymentError('Failed to verify PayU payment');
   }

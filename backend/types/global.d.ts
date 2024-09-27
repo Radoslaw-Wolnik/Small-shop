@@ -21,6 +21,17 @@ declare global {
     } | Express.Multer.File[];
   }
 
+  interface PaymentInitializationResult {
+    success: boolean;
+    transactionId: string;
+    paymentUrl?: string;
+  }
+  
+  interface PaymentVerificationResult {
+    success: boolean;
+    orderId: string;
+  }
+
 }
 
 export {};

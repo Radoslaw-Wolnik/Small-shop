@@ -1,22 +1,24 @@
 // src/routes/payment.routes.ts
 import express from 'express';
-import { authenticateJWT } from '../middleware/auth.middleware';
+import { authenticateJWT, optionalAuthJWT } from '../middleware/auth.middleware';
 import { verifyPaymentCallback } from '../middleware/payment-security.middleware';
 import {
   initializePayment,
   handlePaymentCallback,
   getPaymentStatus,
-  processPayment,
+  verifyPayment,
 } from '../controllers/payment.controller';
 
 const router = express.Router();
 
+// Routes that require authentication
 router.post('/initialize', authenticateJWT, initializePayment);
-router.post('/callback/:gateway', verifyPaymentCallback, handlePaymentCallback);
-router.get('/status/:orderId', authenticateJWT, getPaymentStatus);
+router.post('/verify/:orderId', authenticateJWT, verifyPayment);
 
-// not logged in
-router.post('/process', processPayment); 
-router.get('/status/:orderId/:token', getPaymentStatus);
+// Routes that handle callbacks from payment gateways
+router.post('/callback/:gateway', verifyPaymentCallback, handlePaymentCallback);
+
+// Routes that can be accessed with or without authentication
+router.get('/status/:orderId/:token?', optionalAuthJWT, getPaymentStatus);
 
 export default router;

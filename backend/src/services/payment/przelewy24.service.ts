@@ -16,11 +16,13 @@ function generateP24Signature(sessionId: string, merchantId: string, amount: num
   return crypto.createHash('md5').update(dataToSign).digest('hex');
 }
 
-export async function initializePrzelewy24Payment(order: IOrderDocument): Promise<string> {
+export async function initializePrzelewy24Payment(order: IOrderDocument): Promise<PaymentInitializationResult> {
   try {
-    const sessionId = order._id.toString();
+    const sessionId = order.id.toString();
     const amount = Math.round(order.totalAmount * 100); // Convert to cents
     const signature = generateP24Signature(sessionId, P24_MERCHANT_ID, amount, 'PLN');
+
+    const userEmail = order.user.getDecryptedEmail()
 
     const response = await axios.post(`${P24_API_URL}/transaction/register`, {
       merchantId: P24_MERCHANT_ID,
@@ -29,7 +31,7 @@ export async function initializePrzelewy24Payment(order: IOrderDocument): Promis
       amount: amount,
       currency: 'PLN',
       description: `Order ${order._id}`,
-      email: order.user.email,
+      email: userEmail,
       country: 'PL',
       language: 'pl',
       urlReturn: `${environment.app.frontend}/payment/success`,
@@ -42,13 +44,17 @@ export async function initializePrzelewy24Payment(order: IOrderDocument): Promis
       }
     });
 
-    return response.data.data.token;
+    return {
+      success: true,
+      transactionId: response.data.data.token,
+      paymentUrl: `${P24_API_URL}/trnRequest/${response.data.data.token}`
+    };
   } catch (error) {
     throw new PaymentError('Failed to initialize Przelewy24 payment');
   }
 }
 
-export async function verifyPrzelewy24Payment(sessionId: string, orderId: string, amount: number, currency: string, signature: string): Promise<boolean> {
+export async function verifyPrzelewy24Payment(sessionId: string, orderId: string, amount: number, currency: string, signature: string): Promise<PaymentVerificationResult> {
   try {
     const expectedSignature = generateP24Signature(sessionId, P24_MERCHANT_ID, amount, currency);
     if (signature !== expectedSignature) {
@@ -70,7 +76,10 @@ export async function verifyPrzelewy24Payment(sessionId: string, orderId: string
       }
     });
 
-    return response.data.data.status === 'success';
+    return {
+      success: response.data.data.status === 'success',
+      orderId: orderId
+    };
   } catch (error) {
     throw new PaymentError('Failed to verify Przelewy24 payment');
   }

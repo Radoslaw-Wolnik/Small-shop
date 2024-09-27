@@ -3,14 +3,18 @@
 import { IOrderDocument } from '../../models/order.model';
 import { PaymentError } from '../../utils/custom-errors.util';
 
-export async function processMockPayment(order: IOrderDocument): Promise<{ success: boolean; transactionId: string }> {
+export async function processMockPayment(order: IOrderDocument): Promise<PaymentInitializationResult> {
   try {
     // Simulate a payment process
     const success = Math.random() > 0.1; // 90% success rate
     const transactionId = `MOCK${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
     if (success) {
-      return { success: true, transactionId };
+      return {
+        success: true,
+        transactionId,
+        paymentUrl: `https://mock-payment-gateway.com/pay/${transactionId}`
+      };
     } else {
       throw new PaymentError('Mock payment failed');
     }
@@ -19,13 +23,13 @@ export async function processMockPayment(order: IOrderDocument): Promise<{ succe
   }
 }
 
-export async function verifyMockPayment(transactionId: string): Promise<{ verified: boolean; amount: number }> {
+export async function verifyMockPayment(transactionId: string): Promise<PaymentVerificationResult> {
   try {
     // Simulate payment verification
     const verified = Math.random() > 0.05; // 95% verification rate
     return {
-      verified,
-      amount: verified ? Math.floor(Math.random() * 10000) / 100 : 0
+      success: verified,
+      orderId: transactionId.substring(4) // Mock orderId based on transactionId
     };
   } catch (error) {
     throw new PaymentError('Failed to verify mock payment');

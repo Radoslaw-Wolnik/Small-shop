@@ -11,14 +11,19 @@ export interface IOrderDocument extends Document {
   }[];
   totalAmount: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'disputed';
+  
   shippingAddress: Schema.Types.ObjectId;
   shippingMethod: string;
   shippingProvider?: string;
   shippingLabel?: string;
   trackingNumber?: string;
+
   paymentMethod: string;
   paymentGateway?: string;
   paymentStatus: 'pending' | 'paid' | 'failed';
+  transactionId?: string;
+  paymentUrl?: string;
+
   promoCodeUsed?: string;
   disputeId?: Schema.Types.ObjectId;
 
@@ -43,14 +48,19 @@ const orderSchema = new Schema<IOrderDocument>({
     enum: ['pending', 'processing', 'shipped', 'delivered', 'completed', 'cancelled', 'disputed'], 
     default: 'pending' 
   },
+
   shippingAddress: { type: Schema.Types.ObjectId, ref: 'Address', required: true },
   shippingMethod: { type: String, required: true },
   shippingProvider: { type: String },
   shippingLabel: { type: String },
   trackingNumber: String,
+
   paymentMethod: { type: String, required: true },
   paymentGateway: { type: String },
   paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
+  transactionId: { type: String },
+  paymentUrl: { type: String },
+
   promoCodeUsed: String,
   disputeId: { type: Schema.Types.ObjectId, ref: 'Dispute' },
 

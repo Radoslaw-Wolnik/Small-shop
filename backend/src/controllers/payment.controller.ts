@@ -2,11 +2,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { CustomError, NotFoundError, InternalServerError, BadRequestError, PaymentError, UnauthorizedError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
-import Order from '../models/order.model';
-// Import payment gateway services (these would need to be implemented)
+import Order, { IOrderDocument } from '../models/order.model';
 import { initializePayPalPayment, verifyPayPalPayment } from '../services/payment/paypal.service';
 import { initializePrzelewy24Payment, verifyPrzelewy24Payment } from '../services/payment/przelewy24.service';
 import { initializePayUPayment, verifyPayUPayment } from '../services/payment/payU.service';
+import { processStripePayment, verifyStripePayment } from '../services/payment/stripe.service';
 
 export const initializePayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -17,25 +17,32 @@ export const initializePayment = async (req: AuthRequest, res: Response, next: N
       throw new NotFoundError('Order not found');
     }
 
-    let paymentUrl;
+    let paymentResult: { success: boolean; transactionId: string; paymentUrl?: string };
     switch (gateway) {
       case 'paypal':
-        paymentUrl = await initializePayPalPayment(order);
+        paymentResult = await initializePayPalPayment(order);
         break;
       case 'przelewy24':
-        paymentUrl = await initializePrzelewy24Payment(order);
+        paymentResult = await initializePrzelewy24Payment(order);
         break;
       case 'payu':
-        paymentUrl = await initializePayUPayment(order);
+        paymentResult = await initializePayUPayment(order);
         break;
       case 'stripe':
-        // not yet implemented
+        paymentResult = await processStripePayment(order);
+        break;
       default:
         throw new BadRequestError('Invalid payment gateway');
     }
 
-    logger.info('Payment initialized', { orderId, gateway, userId: req.user!.id });
-    res.json({ paymentUrl });
+    order.paymentStatus = 'pending';
+    order.paymentMethod = gateway;
+    order.transactionId = paymentResult.transactionId;
+    order.paymentUrl = paymentResult.paymentUrl;
+    await order.save();
+
+    logger.info('Payment initialized', { orderId, gateway, userId: req.user?._id });
+    res.json({ paymentUrl: paymentResult.paymentUrl, transactionId: paymentResult.transactionId });
   } catch (error) {
     next(error instanceof CustomError ? error : new InternalServerError('Error initializing payment'));
   }
@@ -46,13 +53,13 @@ export const handlePaymentCallback = async (req: Request, res: Response, next: N
     const { gateway } = req.params;
     const paymentData = req.body;
 
-    let verificationResult;
+    let verificationResult: { success: boolean; orderId: string };
     switch (gateway) {
       case 'paypal':
-        verificationResult = await verifyPayPalPayment(paymentData);
+        verificationResult = await verifyPayPalPayment(paymentData.transactionId);
         break;
       case 'przelewy24':
-        verificationResult = await verifyPrzelewy24Payment(paymentData);
+        verificationResult = await verifyPrzelewy24Payment(paymentData.sessionId, paymentData.orderId, paymentData.amount, paymentData.currency, paymentData.signature);
         break;
       case 'payu':
         verificationResult = await verifyPayUPayment(paymentData);
@@ -73,7 +80,7 @@ export const handlePaymentCallback = async (req: Request, res: Response, next: N
       logger.info('Payment verified', { orderId: verificationResult.orderId, gateway });
       res.json({ message: 'Payment verified successfully' });
     } else {
-      throw new BadRequestError('Payment verification failed');
+      throw new PaymentError('Payment verification failed');
     }
   } catch (error) {
     next(error instanceof CustomError ? error : new InternalServerError('Error handling payment callback'));
@@ -82,15 +89,23 @@ export const handlePaymentCallback = async (req: Request, res: Response, next: N
 
 export const getPaymentStatus = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { orderId } = req.params;
+    const { orderId, token } = req.params;
 
     const order = await Order.findById(orderId);
     if (!order) {
       throw new NotFoundError('Order not found');
     }
 
-    if (req.user && order.user && order.user.toString() !== req.user._id.toString()) {
-      throw new UnauthorizedError('Not authorized to view this order');
+    if (req.user) {
+      // Authenticated user
+      if (order.user && order.user.toString() !== req.user.id) {
+        throw new UnauthorizedError('Not authorized to view this order');
+      }
+    } else {
+      // Non-authenticated user
+      if (!token || token !== order.anonToken) {
+        throw new UnauthorizedError('Invalid or missing token');
+      }
     }
 
     res.json({ paymentStatus: order.paymentStatus });
@@ -99,30 +114,47 @@ export const getPaymentStatus = async (req: AuthRequest, res: Response, next: Ne
   }
 };
 
-export const processPayment = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const verifyPayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { orderId, paymentMethod, paymentDetails } = req.body;
+    const { orderId } = req.params;
 
     const order = await Order.findById(orderId);
     if (!order) {
       throw new NotFoundError('Order not found');
     }
 
-    // Here you would typically integrate with a payment processor
-    // This is a simplified example
-    const paymentSuccessful = Math.random() > 0.1; // 90% success rate for demonstration
+    if (!order.transactionId) {
+      throw new BadRequestError('No transaction ID found for this order');
+    }
 
-    if (paymentSuccessful) {
+    let verificationResult: PaymentVerificationResult;
+    switch (order.paymentMethod) {
+      case 'paypal':
+        verificationResult = await verifyPayPalPayment(order.transactionId);
+        break;
+      case 'przelewy24':
+        verificationResult = await verifyPrzelewy24Payment(order.transactionId, orderId, order.totalAmount, 'PLN', req.body.signature);
+        break;
+      case 'payu':
+        verificationResult = await verifyPayUPayment(req.body);
+        break;
+      case 'stripe':
+        verificationResult = await verifyStripePayment(order.transactionId);
+        break;
+      default:
+        throw new BadRequestError('Invalid payment method');
+    }
+
+    if (verificationResult.success) {
       order.paymentStatus = 'paid';
-      order.paymentMethod = paymentMethod;
       await order.save();
 
-      logger.info('Payment processed successfully', { orderId, paymentMethod });
-      res.json({ message: 'Payment processed successfully' });
+      logger.info('Payment verified', { orderId, paymentMethod: order.paymentMethod });
+      res.json({ message: 'Payment verified successfully' });
     } else {
-      throw new PaymentError('Payment processing failed');
+      throw new PaymentError('Payment verification failed');
     }
   } catch (error) {
-    next(error);
+    next(error instanceof CustomError ? error : new InternalServerError('Error verifying payment'));
   }
 };
