@@ -6,6 +6,7 @@ import Variant from '../models/variant.model';
 import Order from '../models/order.model';
 import Tag from '../models/tag.model';
 import { NotFoundError, BadRequestError, InternalServerError, UnauthorizedError, CustomError } from '../utils/custom-errors.util';
+import { updateInventoryAfterVariantRemoval } from '../utils/product.util'
 import logger from '../utils/logger.util';
 
 import slugify from 'slugify';
@@ -183,6 +184,9 @@ export const removeVariant = async (req: AuthRequest, res: Response, next: NextF
       );
     }
 
+    // Update inventory
+    await updateInventoryAfterVariantRemoval(product, variantId);
+
     await product.save();
 
     logger.info('Variant removed from product', { 
@@ -196,6 +200,8 @@ export const removeVariant = async (req: AuthRequest, res: Response, next: NextF
     next(error instanceof CustomError ? error : new InternalServerError('Error removing variant from product'));
   }
 };
+
+
 
 export const addTag = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
