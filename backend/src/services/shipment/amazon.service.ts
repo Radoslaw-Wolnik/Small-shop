@@ -3,7 +3,8 @@
 import axios from 'axios';
 import crypto from 'crypto';
 import { IOrderDocument } from '../../models/order.model';
-import { ShippingError } from '../../utils/custom-errors.util';
+import Address from '../../models/address.model';
+import { NotFoundError, ShippingError } from '../../utils/custom-errors.util';
 import environment from '../../config/environment';
 
 const AMAZON_API_URL = environment.shipment.amazonApiUrl;
@@ -20,11 +21,16 @@ function generateAmazonAuthHeader(method: string, path: string, data: string = '
 
 export async function generateAmazonShippingLabel(order: IOrderDocument): Promise<{ url: string; trackingNumber: string }> {
   try {
+    const address = await Address.findById(order.shippingAddress);
+    if (!address){
+      throw new NotFoundError("Address");
+    }
+
     const path = '/shipping/v1/shipments';
     const data = JSON.stringify({
       shipmentRequestDetails: {
-        amazonOrderId: order._id.toString(),
-        sellerOrderId: order._id.toString(),
+        amazonOrderId: order.id.toString(),
+        sellerOrderId: order.id.toString(),
         itemList: order.products.map(product => ({
           orderItemId: product.product.toString(),
           quantity: product.quantity
@@ -38,12 +44,12 @@ export async function generateAmazonShippingLabel(order: IOrderDocument): Promis
           countryCode: "US"
         },
         shipToAddress: {
-          name: `${order.user.firstName} ${order.user.lastName}`,
-          addressLine1: order.shippingAddress.street,
-          city: order.shippingAddress.city,
-          stateOrProvinceCode: order.shippingAddress.state,
-          postalCode: order.shippingAddress.zipCode,
-          countryCode: order.shippingAddress.country
+          name: `${order.userInfo.firstName} ${order.userInfo.lastName}`,
+          addressLine1: address.street,
+          city: address.city,
+          stateOrProvinceCode: address.state,
+          postalCode: address.zipCode,
+          countryCode: address.country
         },
         packageDimensions: {
           length: 30,

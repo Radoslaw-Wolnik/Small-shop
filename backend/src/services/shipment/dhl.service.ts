@@ -2,7 +2,8 @@
 
 import axios from 'axios';
 import { IOrderDocument } from '../../models/order.model';
-import { ShippingError } from '../../utils/custom-errors.util';
+import Address from '../../models/address.model';
+import { ShippingError, NotFoundError } from '../../utils/custom-errors.util';
 import environment from '../../config/environment';
 
 const DHL_API_URL = environment.shipment.dhlApiUrl;
@@ -10,6 +11,10 @@ const DHL_API_KEY = environment.shipment.dhlApiKey;
 
 export async function generateDHLShippingLabel(order: IOrderDocument): Promise<{ url: string; trackingNumber: string }> {
   try {
+    const address = await Address.findById(order.shippingAddress);
+    if (!address){
+      throw new NotFoundError("Address");
+    }
     const response = await axios.post(`${DHL_API_URL}/shipments`, {
       plannedShippingDateAndTime: new Date().toISOString(),
       pickup: {
@@ -34,15 +39,15 @@ export async function generateDHLShippingLabel(order: IOrderDocument): Promise<{
         },
         receiverDetails: {
           postalAddress: {
-            postalCode: order.shippingAddress.zipCode,
-            cityName: order.shippingAddress.city,
-            countryCode: order.shippingAddress.country,
-            addressLine1: order.shippingAddress.street
+            postalCode: address.zipCode,
+            cityName: address.city,
+            countryCode: address.country,
+            addressLine1: address.street
           },
           contactInformation: {
-            email: order.user.email,
-            phone: order.user.phone,
-            fullName: `${order.user.firstName} ${order.user.lastName}`
+            email: order.userInfo.email,
+            phone: order.userInfo.phone,
+            fullName: `${order.userInfo.firstName} ${order.userInfo.lastName}`
           }
         }
       },

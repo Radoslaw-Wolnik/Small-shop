@@ -2,14 +2,20 @@
 
 import axios from 'axios';
 import { IOrderDocument } from '../../models/order.model';
-import { ShippingError } from '../../utils/custom-errors.util';
+import Address from '../../models/address.model';
+import { ShippingError, NotFoundError } from '../../utils/custom-errors.util';
 import environment from '../../config/environment';
+import { add } from 'winston';
 
 const INPOST_API_URL = environment.shipment.inpostApiUrl;
 const INPOST_API_KEY = environment.shipment.inpostApiKey;
 
 export async function generateInPostShippingLabel(order: IOrderDocument): Promise<{ url: string; trackingNumber: string }> {
   try {
+    const address = await Address.findById(order.shippingAddress);
+    if (!address){
+      throw new NotFoundError("Address");
+    }
     const response = await axios.post(`${INPOST_API_URL}/shipments`, {
       sender: {
         name: environment.app.company.name,
@@ -25,14 +31,14 @@ export async function generateInPostShippingLabel(order: IOrderDocument): Promis
         }
       },
       receiver: {
-        name: `${order.user.firstName} ${order.user.lastName}`,
-        email: order.user.email,
-        phone: order.user.phone,
+        name: `${order.userInfo.firstName} ${order.userInfo.lastName}`,
+        email: order.userInfo.email,
+        phone: order.userInfo.phone,
         address: {
-          street: order.shippingAddress.street,
-          building_number: order.shippingAddress.buildingNumber,
-          city: order.shippingAddress.city,
-          post_code: order.shippingAddress.zipCode,
+          street: address.street,
+          building_number: address.buildingNumber,
+          city: address.city,
+          post_code: address.zipCode,
           country_code: "PL"
         }
       },

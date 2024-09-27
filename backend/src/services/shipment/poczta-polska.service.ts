@@ -2,7 +2,8 @@
 
 import axios from 'axios';
 import { IOrderDocument } from '../../models/order.model';
-import { ShippingError } from '../../utils/custom-errors.util';
+import Address from '../../models/address.model';
+import { ShippingError, NotFoundError } from '../../utils/custom-errors.util';
 import environment from '../../config/environment';
 
 const PP_API_URL = environment.shipment.pocztaPolskaApiUrl;
@@ -10,6 +11,10 @@ const PP_API_KEY = environment.shipment.pocztaPolskaApiKey;
 
 export async function generatePocztaPolskaShippingLabel(order: IOrderDocument): Promise<{ url: string; trackingNumber: string }> {
   try {
+    const address = await Address.findById(order.shippingAddress);
+    if (!address){
+      throw new NotFoundError("Address");
+    }
     const response = await axios.post(`${PP_API_URL}/shipments`, {
       senderAddress: {
         name: environment.app.company.name,
@@ -20,12 +25,12 @@ export async function generatePocztaPolskaShippingLabel(order: IOrderDocument): 
         country: environment.app.company.address.country
       },
       receiverAddress: {
-        name: `${order.user.firstName} ${order.user.lastName}`,
-        street: order.shippingAddress.street,
-        houseNumber: order.shippingAddress.houseNumber,
-        city: order.shippingAddress.city,
-        zipCode: order.shippingAddress.zipCode,
-        country: order.shippingAddress.country
+        name: `${order.userInfo.firstName} ${order.userInfo.lastName}`,
+        street: address.street,
+        houseNumber: address.buildingNumber,
+        city: address.city,
+        zipCode: address.zipCode,
+        country: address.country
       },
       parcel: {
         weight: 1, // in kg
