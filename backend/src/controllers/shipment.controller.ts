@@ -1,13 +1,13 @@
 // src/controllers/shipping.controller.ts
 import { Request, Response, NextFunction } from 'express';
-import { CustomError, NotFoundError, InternalServerError, BadRequestError } from '../utils/custom-errors.util';
+import { CustomError, NotFoundError, InternalServerError, BadRequestError, ExpiredTokenError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 import Order from '../models/order.model';
 // Import shipping provider services
-import { generatePocztaPolskaLabel, trackPocztaPolskaShipment } from '../services/shipment/poczta-polska.service';
-import { generateDHLLabel, trackDHLShipment } from '../services/shipment/dhl.service';
-import { generateAmazonLabel, trackAmazonShipment } from '../services/shipment/amazon.service';
-import { generatePaczkomatyLabel, trackPaczkomatyShipment } from '../services/shipment/inPost.service';
+import { generatePocztaPolskaShippingLabel, trackPocztaPolskaShipment } from '../services/shipment/poczta-polska.service';
+import { generateDHLShippingLabel, trackDHLShipment } from '../services/shipment/dhl.service';
+import { generateAmazonShippingLabel, trackAmazonShipment } from '../services/shipment/amazon.service';
+import { generateInPostShippingLabel, trackInPostShipment } from '../services/shipment/inPost.service';
 
 export const generateShippingLabel = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -21,16 +21,16 @@ export const generateShippingLabel = async (req: AuthRequest, res: Response, nex
     let shippingLabel;
     switch (provider) {
       case 'poczta-polska':
-        shippingLabel = await generatePocztaPolskaLabel(order);
+        shippingLabel = await generatePocztaPolskaShippingLabel(order);
         break;
       case 'dhl':
-        shippingLabel = await generateDHLLabel(order);
+        shippingLabel = await generateDHLShippingLabel(order);
         break;
       case 'amazon':
-        shippingLabel = await generateAmazonLabel(order);
+        shippingLabel = await generateAmazonShippingLabel(order);
         break;
       case 'paczkomaty':
-        shippingLabel = await generatePaczkomatyLabel(order);
+        shippingLabel = await generateInPostShippingLabel(order);
         break;
       default:
         throw new BadRequestError('Invalid shipping provider');
@@ -73,8 +73,8 @@ export const trackShipment = async (req: AuthRequest, res: Response, next: NextF
       case 'amazon':
         trackingInfo = await trackAmazonShipment(order.trackingNumber);
         break;
-      case 'paczkomaty':
-        trackingInfo = await trackPaczkomatyShipment(order.trackingNumber);
+      case 'inpost':
+        trackingInfo = await trackInPostShipment(order.trackingNumber);
         break;
       default:
         throw new BadRequestError('Invalid shipping provider');
@@ -116,7 +116,11 @@ export const TrackShippmentAnonymous = async (req: Request, res: Response, next:
     if (!order) {
       throw new NotFoundError('Order not found or invalid token');
     }
-    // do sth else if token expired
+
+    // Check if the token has expired
+    if (order.anonTokenExpires && order.anonTokenExpires < new Date()) {
+      throw new ExpiredTokenError('Tracking token has expired');
+    }
 
     let trackingInfo;
     switch (order.shippingProvider) {
@@ -129,8 +133,8 @@ export const TrackShippmentAnonymous = async (req: Request, res: Response, next:
       case 'amazon':
         trackingInfo = await trackAmazonShipment(trackingNumber);
         break;
-      case 'paczkomaty':
-        trackingInfo = await trackPaczkomatyShipment(trackingNumber);
+      case 'inpost':
+        trackingInfo = await trackInPostShipment(trackingNumber);
         break;
       default:
         throw new BadRequestError('Invalid shipping provider');
