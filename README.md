@@ -7,11 +7,10 @@
 - Anonymous : folks that buy without account or dispiute via magic link
 
 ## ToDo: 
- - [ ] for payment some key menagement system idk with Hardware Security Module (HSM)
  - [ ] refund payment
 
- - [ ] fix payment services (mostly problem with getting user data if needed from order.userID)
- - [ ] fix shipment services - tbh idk what wrong in there (a lot)
+ - [ ] should i make generating tokens int its own middleware or util (its a lot and it obsures the auth and isnt really auth function)
+ - [ ] should i schedule cleaning job for resolved disputes?
 
 ## ToDo later mby:
  - [ ] check promotion controller
