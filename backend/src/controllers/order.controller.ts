@@ -203,7 +203,7 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response, next: N
 
     // Send order status update email
     await environment.email.service?.sendTemplatedEmail(
-      order.userEmail,
+      order.userInfo.email,
       'orderStatusUpdate',
       {
         orderId: order._id,
@@ -211,7 +211,7 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response, next: N
         frontendUrl: environment.app.frontend,
         token: order.anonToken
       },
-      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+      { id: order.user.toString(), isAnonymous: order.userInfo.isAnonymous }
     );
 
     logger.info('Order status updated', { id, status, updatedBy: req.user._id });
@@ -269,14 +269,14 @@ export const cancelOrder = async (req: AuthRequest, res: Response, next: NextFun
 
     // Send order cancellation email
     await environment.email.service.sendTemplatedEmail(
-      order.userEmail,
+      order.userInfo.email,
       'orderCancellation',
       {
         orderId: order._id,
         frontendUrl: environment.app.frontend,
         token: anonymousToken
       },
-      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+      { id: order.user.toString(), isAnonymous: order.userInfo.isAnonymous }
     );
 
     order.status = 'cancelled';
@@ -396,14 +396,14 @@ export const markOrderAsReceived = async (req: AuthRequest, res: Response, next:
 
     // Send order received confirmation email
     await environment.email.service.sendTemplatedEmail(
-      order.userEmail,
+      order.userInfo.email,
       'orderReceived',
       {
         orderId: order._id,
         frontendUrl: environment.app.frontend,
         token: order.anonToken
       },
-      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+      { id: order.user.toString(), isAnonymous: order.userInfo.isAnonymous }
     );
 
     logger.info('Order marked as received', { id, userId: req.user?._id || 'anonymous' });
@@ -465,7 +465,7 @@ export const denyOrder = async (req: AuthRequest, res: Response, next: NextFunct
 
     // Send order denial email
     await environment.email.service.sendTemplatedEmail(
-      order.userEmail,
+      order.userInfo.email,
       'orderDenied',
       {
         orderId: order._id,
@@ -473,7 +473,7 @@ export const denyOrder = async (req: AuthRequest, res: Response, next: NextFunct
         frontendUrl: environment.app.frontend,
         token: order.anonToken
       },
-      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+      { id: order.user.toString(), isAnonymous: order.userInfo.isAnonymous }
     );
 
     logger.info('Order denied', { id, reason, deniedBy: req.user._id });

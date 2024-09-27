@@ -3,8 +3,13 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IOrderDocument extends Document {
   user: Schema.Types.ObjectId;
-  userEmail: string;
-  isAnonymousOrder: boolean;
+  userInfo: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    isAnonymous: boolean;
+  };
   products: {
     product: Schema.Types.ObjectId;
     quantity: number;
@@ -39,8 +44,13 @@ export interface IOrderDocument extends Document {
 
 const orderSchema = new Schema<IOrderDocument>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  userEmail: { type: String, required: true },
-  isAnonymousOrder: { type: Boolean, default: true },
+  userInfo: {
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: false },
+    isAnonymous: { type: Boolean, default: true },
+  },
   products: [{
     product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true },

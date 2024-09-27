@@ -31,7 +31,7 @@ export const createDispute = async (req: AuthRequest, res: Response, next: NextF
 
 
     await environment.email.service?.sendTemplatedEmail(
-      order.userEmail,
+      order.userInfo.email,
       'disputeConfirmation',
       {
         orderId: orderId,
@@ -39,7 +39,7 @@ export const createDispute = async (req: AuthRequest, res: Response, next: NextF
         frontendUrl: environment.app.frontend,
         token: order.anonToken
       },
-      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+      { id: order.user.toString(), isAnonymous: order.userInfo.isAnonymous }
     );
 
     res.status(201).json(dispute);
@@ -101,7 +101,7 @@ export const updateDisputeStatus = async (req: AuthRequest, res: Response, next:
 
      // Send dispute status update email
      await environment.email.service.sendTemplatedEmail(
-      order.userEmail,
+      order.userInfo.email,
       'disputeUpdate',
       {
         orderId: order._id,
@@ -111,7 +111,7 @@ export const updateDisputeStatus = async (req: AuthRequest, res: Response, next:
         frontendUrl: environment.app.frontend,
         token: order.anonToken
       },
-      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+      { id: order.user.toString(), isAnonymous: order.userInfo.isAnonymous }
     );
 
     logger.info('Dispute status updated', { disputeId: id, status, updatedBy: req.user?.id });

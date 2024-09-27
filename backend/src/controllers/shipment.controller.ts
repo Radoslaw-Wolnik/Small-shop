@@ -110,7 +110,7 @@ export const updateShippingStatus = async (req: AuthRequest, res: Response, next
 
     // Send shipping status update email
     await environment.email.service.sendTemplatedEmail(
-      order.userEmail,
+      order.userInfo.email,
       'shipmentUpdate',
       {
         orderId: order._id,
@@ -119,7 +119,7 @@ export const updateShippingStatus = async (req: AuthRequest, res: Response, next
         frontendUrl: environment.app.frontend,
         token: order.anonToken
       },
-      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+      { id: order.user.toString(), isAnonymous: order.userInfo.isAnonymous }
     );
 
     logger.info('Shipping status updated', { orderId, status, userId: req.user!.id });

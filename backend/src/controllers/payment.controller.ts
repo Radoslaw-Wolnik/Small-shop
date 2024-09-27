@@ -159,7 +159,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response, next: NextF
       await order.save();
 
       await environment.email.service.sendTemplatedEmail(
-        order.userEmail,
+        order.userInfo.email,
         'paymentUpdate',
         {
           orderId: order._id,
@@ -167,14 +167,14 @@ export const verifyPayment = async (req: AuthRequest, res: Response, next: NextF
           frontendUrl: environment.app.frontend,
           token: order.anonToken
         },
-        { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+        { id: order.user.toString(), isAnonymous: order.userInfo.isAnonymous }
       );
 
       logger.info('Payment verified', { orderId, paymentMethod: order.paymentMethod });
       res.json({ message: 'Payment verified successfully' });
     } else {
       await environment.email.service.sendTemplatedEmail(
-        order.userEmail,
+        order.userInfo.email,
         'paymentUpdate',
         {
           orderId: order._id,
@@ -182,7 +182,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response, next: NextF
           frontendUrl: environment.app.frontend,
           token: order.anonToken
         },
-        { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+        { id: order.user.toString(), isAnonymous: order.userInfo.isAnonymous }
       );
       throw new PaymentError('Payment verification failed');
     }
