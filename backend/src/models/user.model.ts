@@ -11,6 +11,9 @@ export interface IUserDocument extends Document {
   email: string;
   emailHash: string;
   password: string;
+  FirstName: string;
+  LastName: string;
+  Phone?: string;
   profilePicture?: string;
   isVerified: boolean;
   verificationToken?: string;
@@ -69,6 +72,46 @@ const userSchema = new mongoose.Schema<IUserDocument, IUserModel>({
     type: String, 
     minlength: [8, 'Password must be at least 8 characters long']
    },
+   FirstName: { 
+    type: String, 
+    required: true, 
+    trim: true, // Removes extra spaces
+    minlength: 2, // Set a minimum length
+    maxlength: 50, // Set a maximum length
+    match: /^[a-zA-Zà-žÀ-Ž\s'-]+$/, // Allow letters (with accents), spaces, hyphens, and apostrophes
+    validate: {
+      validator: function(v) {
+        return /^[a-zA-Zà-žÀ-Ž\s'-]+$/.test(v);
+      },
+      message: props => `${props.value} contains invalid characters!`
+    }
+  },
+  LastName: { 
+    type: String, 
+    required: true, 
+    trim: true,
+    minlength: 2,
+    maxlength: 50,
+    match: /^[a-zA-Zà-žÀ-Ž\s'-]+$/,
+    validate: {
+      validator: function(v) {
+        return /^[a-zA-Zà-žÀ-Ž\s'-]+$/.test(v);
+      },
+      message: props => `${props.value} contains invalid characters!`
+    }
+  },
+  Phone: { 
+    type: String, 
+    // required: true, // If you want to make the phone mandatory
+    trim: true,
+    match: /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/, // Allows international format, spaces, dashes, etc.
+    validate: {
+      validator: function(v) {
+        return /^[+]?[(]?[0-9]{1,4}[)]?[-\s./0-9]*$/.test(v) && v.length >= 9 && v.length <= 15;
+      },
+      message: props => `${props.value} is not a valid phone number!`
+    }
+  },
   profilePicture: { 
     type: String,
     validate: {

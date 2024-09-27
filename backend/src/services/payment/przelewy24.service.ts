@@ -22,8 +22,6 @@ export async function initializePrzelewy24Payment(order: IOrderDocument): Promis
     const amount = Math.round(order.totalAmount * 100); // Convert to cents
     const signature = generateP24Signature(sessionId, P24_MERCHANT_ID, amount, 'PLN');
 
-    const userEmail = order.user.getDecryptedEmail()
-
     const response = await axios.post(`${P24_API_URL}/transaction/register`, {
       merchantId: P24_MERCHANT_ID,
       posId: P24_MERCHANT_ID,
@@ -31,7 +29,7 @@ export async function initializePrzelewy24Payment(order: IOrderDocument): Promis
       amount: amount,
       currency: 'PLN',
       description: `Order ${order._id}`,
-      email: userEmail,
+      email: order.userEmail,
       country: 'PL',
       language: 'pl',
       urlReturn: `${environment.app.frontend}/payment/success`,

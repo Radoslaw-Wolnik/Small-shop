@@ -2,6 +2,7 @@
 
 import axios from 'axios';
 import { IOrderDocument } from '../../models/order.model';
+import User from '../../models/user.model';
 import { PaymentError } from '../../utils/custom-errors.util';
 import environment from '../../config/environment';
 
@@ -23,15 +24,21 @@ async function getPayPalAccessToken() {
 export async function initializePayPalPayment(order: IOrderDocument): Promise<PaymentInitializationResult> {
   try {
     const accessToken = await getPayPalAccessToken();
+    // Fetch user data
+
+
     const response = await axios.post(`${PAYPAL_API_URL}/v2/checkout/orders`, {
       intent: 'CAPTURE',
       purchase_units: [{
         amount: {
-          currency_code: 'USD',
+          currency_code: 'PLN',
           value: order.totalAmount.toFixed(2)
         },
         description: `Order ${order.id}`
-      }]
+      }],
+      payer: {
+        email_address: order.userEmail
+      }
     }, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,

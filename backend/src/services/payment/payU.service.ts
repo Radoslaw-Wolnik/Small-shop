@@ -3,6 +3,7 @@
 import axios from 'axios';
 import crypto from 'crypto';
 import { IOrderDocument } from '../../models/order.model';
+import User from '../../models/user.model';
 import { PaymentError } from '../../utils/custom-errors.util';
 import environment from '../../config/environment';
 
@@ -28,6 +29,11 @@ function generatePayUSignature(payload: string) {
 export async function initializePayUPayment(order: IOrderDocument): Promise<PaymentInitializationResult> {
   try {
     const accessToken = await getPayUAccessToken();
+    const user = await User.findById(order.user);
+    if (!user) {
+      throw new PaymentError('User not found');
+    }
+
     const orderData = {
       notifyUrl: `${environment.app.backend}/api/payments/callback/payu`,
       customerIp: '127.0.0.1', // Replace with actual customer IP
@@ -36,14 +42,14 @@ export async function initializePayUPayment(order: IOrderDocument): Promise<Paym
       currencyCode: 'PLN',
       totalAmount: Math.round(order.totalAmount * 100),
       buyer: {
-        email: order.user.email,
-        phone: order.user.phone,
-        firstName: order.user.firstName,
-        lastName: order.user.lastName,
+        email: order.userEmail,
+        // phone: user.phone, <-- idk if i have to give it to them if so i should propably make it in payu specific thing
+        firstName: user.FirstName,
+        lastName: user.LastName,
         language: 'pl'
       },
       products: order.products.map(product => ({
-        name: product.product.name,
+        name: product.product.toString(), // Assuming this is the product ID
         unitPrice: Math.round(product.price * 100),
         quantity: product.quantity
       }))
