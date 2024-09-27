@@ -1,7 +1,8 @@
 // src/controllers/variant.controller.ts
 import { Request, Response, NextFunction } from 'express';
 import Variant from '../models/variant.model';
-import { CustomError, NotFoundError, InternalServerError } from '../utils/custom-errors.util';
+import Product from '../models/product.model';
+import { CustomError, NotFoundError, InternalServerError, BadRequestError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 
 export const getVariants = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -53,9 +54,14 @@ export const updateVariant = async (req: AuthRequest, res: Response, next: NextF
 export const deleteVariant = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    // remove variant only if its not used in products 
-    const variant = await Variant.findByIdAndDelete(id);
 
+    // Check if the variant is used in any products
+    const productsWithVariant = await Product.countDocuments({ 'variants.variant': id });
+    if (productsWithVariant > 0) {
+      throw new BadRequestError('Cannot delete variant that is used in products');
+    }
+
+    const variant = await Variant.findByIdAndDelete(id);
     if (!variant) {
       throw new NotFoundError('Variant');
     }

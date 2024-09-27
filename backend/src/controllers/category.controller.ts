@@ -1,6 +1,7 @@
 // src/controllers/category.controller.ts
 import { Request, Response, NextFunction } from 'express';
 import Category from '../models/category.model';
+import Product from '../models/product.model';
 import { CustomError, NotFoundError, InternalServerError, BadRequestError } from '../utils/custom-errors.util';
 import slugify from 'slugify';
 import logger from '../utils/logger.util';
@@ -63,6 +64,13 @@ export const updateCategory = async (req: AuthRequest, res: Response, next: Next
 export const deleteCategory = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
+    
+    // Check if there are any products in this category
+    const productsCount = await Product.countDocuments({ category: id });
+    if (productsCount > 0) {
+      throw new BadRequestError('Cannot delete category with existing products');
+    }
+
     const category = await Category.findByIdAndDelete(id);
     if (!category) {
       throw new NotFoundError('Category');
