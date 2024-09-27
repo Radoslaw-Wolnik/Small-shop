@@ -7,11 +7,14 @@ import { appConfig, AppConfig } from './app.config';
 import { productConfig, ProductConfig } from './product.config';
 import { shipmentConfig, ShipmentConfig } from './shipment.config';
 import { paymentConfig, PaymentConfig } from './payment.config';
+import { EmailService } from '../services/email.service';
 
 interface Enviorement {
   database: DatabaseConfig;
   auth: AuthConfig;
-  email: EmailConfig;
+  email: EmailConfig & {
+    service: EmailService
+  }
   app: AppConfig;
   product: ProductConfig;
   shipment: ShipmentConfig;
@@ -21,7 +24,10 @@ interface Enviorement {
 export const environment: Enviorement = {
   database: databaseConfig,
   auth: authConfig,
-  email: emailConfig,
+  email: { 
+    ...emailConfig,
+    service: EmailService.getInstance(), 
+  },
   app: appConfig,
   product: productConfig,
   shipment: shipmentConfig,

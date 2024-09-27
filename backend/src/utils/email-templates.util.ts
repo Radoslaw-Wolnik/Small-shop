@@ -1,76 +1,38 @@
-// src/utils/email-templates.util.ts
-
-import fs from 'fs/promises';
-import path from 'path';
 import Handlebars from 'handlebars';
-
-interface EmailTemplate {
-  name: string;
-  subject: string;
-  htmlBody: string;
-  textBody: string;
-  variables: string[];
-}
+import EmailTemplate, { IEmailTemplate } from '../models/email-template.model';
+import logger from './logger.util';
 
 class EmailTemplateManager {
-  private templates: Record<string, EmailTemplate> = {};
-  private filePath: string;
+  private cache: Map<string, IEmailTemplate> = new Map();
 
-  constructor(filePath: string) {
-    this.filePath = filePath;
-  }
-
-  async loadTemplates(): Promise<void> {
-    try {
-      const data = await fs.readFile(this.filePath, 'utf8');
-      this.templates = JSON.parse(data);
-    } catch (error) {
-      console.error('Error loading email templates:', error);
-      throw error;
+  async getTemplate(name: string): Promise<IEmailTemplate | null> {
+    if (this.cache.has(name)) {
+      return this.cache.get(name)!;
     }
-  }
 
-  async saveTemplates(): Promise<void> {
-    try {
-      await fs.writeFile(this.filePath, JSON.stringify(this.templates, null, 2));
-    } catch (error) {
-      console.error('Error saving email templates:', error);
-      throw error;
+    const template = await EmailTemplate.findOne({ name });
+    if (template) {
+      this.cache.set(name, template);
     }
+    return template;
   }
 
-  getTemplate(name: string): EmailTemplate | undefined {
-    return this.templates[name];
-  }
-
-  setTemplate(name: string, template: EmailTemplate): void {
-    this.templates[name] = template;
-  }
-
-  async updateTemplate(name: string, updates: Partial<EmailTemplate>): Promise<void> {
-    if (this.templates[name]) {
-      this.templates[name] = { ...this.templates[name], ...updates };
-      await this.saveTemplates();
+  async updateTemplate(name: string, updates: Partial<IEmailTemplate>): Promise<void> {
+    const result = await EmailTemplate.findOneAndUpdate({ name }, updates, { new: true });
+    if (result) {
+      this.cache.set(name, result);
     } else {
       throw new Error(`Template "${name}" not found`);
     }
   }
 
-  async deleteTemplate(name: string): Promise<void> {
-    if (this.templates[name]) {
-      delete this.templates[name];
-      await this.saveTemplates();
-    } else {
-      throw new Error(`Template "${name}" not found`);
-    }
+  async getAllTemplateNames(): Promise<string[]> {
+    const templates = await EmailTemplate.find({}, 'name');
+    return templates.map(t => t.name);
   }
 
-  getAllTemplateNames(): string[] {
-    return Object.keys(this.templates);
-  }
-
-  renderTemplate(name: string, variables: Record<string, any>): { subject: string; html: string; text: string } {
-    const template = this.getTemplate(name);
+  async renderTemplate(name: string, variables: Record<string, any>): Promise<{ subject: string; html: string; text: string }> {
+    const template = await this.getTemplate(name);
     if (!template) {
       throw new Error(`Template "${name}" not found`);
     }
@@ -87,6 +49,5 @@ class EmailTemplateManager {
   }
 }
 
-const templateManager = new EmailTemplateManager(path.join(__dirname, '../resources/email-templates.json'));
-
+const templateManager = new EmailTemplateManager();
 export default templateManager;

@@ -1,7 +1,5 @@
 // src/config/email.config.ts
 import { getEnvValue } from './get-env-value';
-import templateManager from '../utils/email-templates.util';
-import { EmailService } from '../services/email.service';
 
 export interface EmailConfig {
     host: string;
@@ -9,8 +7,6 @@ export interface EmailConfig {
     user: string;
     password: string;
     from: string;
-    templateManager: typeof templateManager;
-    service?: EmailService;
 }
 
 export const emailConfig: EmailConfig = {
@@ -19,5 +15,4 @@ export const emailConfig: EmailConfig = {
     user: getEnvValue('EMAIL_USER'),
     password: getEnvValue('EMAIL_PASSWORD'),
     from: getEnvValue('EMAIL_FROM'),
-    templateManager: templateManager,
 }
