@@ -5,7 +5,7 @@ import Category from '../models/category.model';
 import Variant from '../models/variant.model';
 import Order from '../models/order.model';
 import Tag from '../models/tag.model';
-import { NotFoundError, BadRequestError, InternalServerError, UnauthorizedError } from '../utils/custom-errors.util';
+import { NotFoundError, BadRequestError, InternalServerError, UnauthorizedError, CustomError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 
 import slugify from 'slugify';
@@ -160,6 +160,40 @@ export const addVariant = async (req: AuthRequest, res: Response, next: NextFunc
     res.json(product);
   } catch (error) {
     next(error);
+  }
+};
+
+export const removeVariant = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { productId, variantId } = req.params;
+    const { deletePhotos = false } = req.body;
+
+    const product = await Product.findById(productId);
+    if (!product) {
+      throw new NotFoundError('Product');
+    }
+
+    // Remove the variant from the product's variants array
+    product.variants = product.variants.filter(v => v.variant.toString() !== variantId);
+
+    // If deletePhotos is true, remove associated photos
+    if (deletePhotos) {
+      product.images = product.images.filter(img => 
+        !img.variantOption || img.variantOption.variant.toString() !== variantId
+      );
+    }
+
+    await product.save();
+
+    logger.info('Variant removed from product', { 
+      productId, 
+      variantId, 
+      photosDeleted: deletePhotos, 
+      updatedBy: req.user!.id 
+    });
+    res.json(product);
+  } catch (error) {
+    next(error instanceof CustomError ? error : new InternalServerError('Error removing variant from product'));
   }
 };
 
