@@ -7,6 +7,7 @@ import { initializePayPalPayment, verifyPayPalPayment } from '../services/paymen
 import { initializePrzelewy24Payment, verifyPrzelewy24Payment } from '../services/payment/przelewy24.service';
 import { initializePayUPayment, verifyPayUPayment } from '../services/payment/payU.service';
 import { processStripePayment, verifyStripePayment } from '../services/payment/stripe.service';
+import environment from '../config/environment';
 
 export const initializePayment = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -157,9 +158,32 @@ export const verifyPayment = async (req: AuthRequest, res: Response, next: NextF
       order.paymentStatus = 'paid';
       await order.save();
 
+      await environment.email.service.sendTemplatedEmail(
+        order.userEmail,
+        'paymentUpdate',
+        {
+          orderId: order._id,
+          paymentStatus: order.paymentStatus,
+          frontendUrl: environment.app.frontend,
+          token: order.anonToken
+        },
+        { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+      );
+
       logger.info('Payment verified', { orderId, paymentMethod: order.paymentMethod });
       res.json({ message: 'Payment verified successfully' });
     } else {
+      await environment.email.service.sendTemplatedEmail(
+        order.userEmail,
+        'paymentUpdate',
+        {
+          orderId: order._id,
+          paymentStatus: order.paymentStatus, // or failed or sth like that
+          frontendUrl: environment.app.frontend,
+          token: order.anonToken
+        },
+        { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+      );
       throw new PaymentError('Payment verification failed');
     }
   } catch (error) {

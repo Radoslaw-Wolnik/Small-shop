@@ -4,6 +4,8 @@ import templateManager from '../utils/email-templates.util';
 import logger from '../utils/logger.util';
 import { IUserDocument } from '../models/user.model';
 import { generateAnonymousToken } from '../middleware/auth.middleware';
+import { EmailUserInfo } from '../types/email.types';
+import jwt, { JwtPayload } from 'jsonwebtoken';
 
 interface EmailOptions {
   to: string;
@@ -52,11 +54,10 @@ export class EmailService {
     }
   }
 
-  async sendTemplatedEmail(to: string, templateName: string, variables: Record<string, any>, user?: IUserDocument): Promise<void> {
+  async sendTemplatedEmail(to: string, templateName: string, variables: Record<string, any>, userInfo: EmailUserInfo): Promise<void> {
     try {
-      let token = '';
-      if (user && user.isAnonymous) {
-        token = await generateAnonymousToken(user);
+      if (userInfo.isAnonymous) {
+        const token = this.generateAnonymousToken(userInfo.id);
         variables.token = token;
       }
 
@@ -69,6 +70,17 @@ export class EmailService {
       logger.error('Error sending templated email', { error, templateName, to });
       throw error;
     }
+  }
+
+  private generateAnonymousToken(userId: string): string {
+    const payload = {
+      id: userId,
+      isAnonymous: true,
+      // email: await user.getDecryptedEmail()
+    };
+    return jwt.sign(payload, environment.auth.jwtSecret, {
+      expiresIn: '30d' // Token expires in 30 days
+    });
   }
 
   async verifyConnection(): Promise<void> {

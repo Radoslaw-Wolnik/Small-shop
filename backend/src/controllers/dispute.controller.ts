@@ -29,18 +29,17 @@ export const createDispute = async (req: AuthRequest, res: Response, next: NextF
 
     await dispute.save();
 
-    const token = generateAnonymousToken(req.user!);
-    const userEmail = await req.user!.getDecryptedEmail();
 
     await environment.email.service?.sendTemplatedEmail(
-      userEmail,
+      order.userEmail,
       'disputeConfirmation',
       {
         orderId: orderId,
         disputeId: dispute.id,
         frontendUrl: environment.app.frontend,
-        token: token
-      }
+        token: order.anonToken
+      },
+      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
     );
 
     res.status(201).json(dispute);
@@ -93,6 +92,27 @@ export const updateDisputeStatus = async (req: AuthRequest, res: Response, next:
     dispute.status = status;
     dispute.resolution = resolution;
     await dispute.save();
+
+    // Fetch the associated order
+    const order = await Order.findById(dispute.order);
+    if (!order) {
+      throw new NotFoundError('Associated order not found');
+    }
+
+     // Send dispute status update email
+     await environment.email.service.sendTemplatedEmail(
+      order.userEmail,
+      'disputeUpdate',
+      {
+        orderId: order._id,
+        disputeId: dispute._id,
+        status,
+        resolution,
+        frontendUrl: environment.app.frontend,
+        token: order.anonToken
+      },
+      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+    );
 
     logger.info('Dispute status updated', { disputeId: id, status, updatedBy: req.user?.id });
     res.json(dispute);

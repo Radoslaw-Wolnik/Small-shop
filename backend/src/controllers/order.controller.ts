@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import Order, { IOrderDocument } from '../models/order.model';
 import User, { IUserDocument } from '../models/user.model';
 import Product from '../models/product.model';
-import { NotFoundError, UnauthorizedError, BadRequestError, InternalServerError } from '../utils/custom-errors.util';
+import { NotFoundError, UnauthorizedError, BadRequestError, InternalServerError, PaymentError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 import { formatOrderDetails } from '../utils/order.util';
 import mongoose, { ClientSession } from 'mongoose';
@@ -13,6 +13,8 @@ import { generateAnonymousToken } from '../middleware/auth.middleware';
 
 interface OrderData {
   user: string;
+  userEmail: string;
+  isAnonymousOrder: boolean;
   products: Array<{
     product: string;
     quantity: number;
@@ -91,7 +93,11 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
         await environment.email.service?.sendTemplatedEmail(
           email,
           'magicLink',
-          { verificationUrl: `${environment.app.frontend}/magic-login/${token}` }
+          { 
+            verificationUrl: `${environment.app.frontend}/magic-login/${token}`,
+            frontendUrl: environment.app.frontend
+          },
+          { id: user._id.toString(), isAnonymous: true }
         );
       }
       isAnonymous = true;
@@ -99,6 +105,8 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
 
     const orderData: OrderData = {
       user: user._id.toString(),
+      userEmail: email,
+      isAnonymousOrder: isAnonymous,
       products,
       shippingAddress,
       shippingMethod,
@@ -116,26 +124,22 @@ export const createOrder = async (req: AuthRequest, res: Response, next: NextFun
     await session.commitTransaction();
     session.endSession();
 
-    const anonymousToken = isAnonymous ? generateAnonymousToken(user) : undefined;
-
     await environment.email.service?.sendTemplatedEmail(
-      user.email,
+      email,
       'orderConfirmation',
       {
         orderId: order._id,
         totalAmount: order.totalAmount,
         orderDetails: formatOrderDetails(order),
         frontendUrl: environment.app.frontend,
-        token: anonymousToken
       },
-      user
+      { id: user._id.toString(), isAnonymous }
     );
 
     logger.info('Order created', { orderId: order._id, userId: user._id, isAnonymous });
     res.status(201).json({ 
       message: 'Order created successfully. Check your email for order details.',
       orderId: order._id,
-      token: anonymousToken
     });
   } catch (error) {
     await session.abortTransaction();
@@ -196,6 +200,20 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response, next: N
       throw new NotFoundError('Order');
     }
 
+
+    // Send order status update email
+    await environment.email.service?.sendTemplatedEmail(
+      order.userEmail,
+      'orderStatusUpdate',
+      {
+        orderId: order._id,
+        newStatus: status,
+        frontendUrl: environment.app.frontend,
+        token: order.anonToken
+      },
+      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+    );
+
     logger.info('Order status updated', { id, status, updatedBy: req.user._id });
     res.json(order);
   } catch (error) {
@@ -214,21 +232,32 @@ export const cancelOrder = async (req: AuthRequest, res: Response, next: NextFun
       throw new NotFoundError('Order');
     }
 
-    if (order.user.toString() !== req.user!._id.toString()) {
+    const user = req.user;
+    const anonymousToken = req.query.token as string;
+
+    if (!user && (!anonymousToken || anonymousToken !== order.anonToken)) {
+      throw new UnauthorizedError('Not authorized to cancel this order');
+    }
+
+    if (user && order.user.toString() !== user._id.toString()) {
       throw new UnauthorizedError('Not authorized to cancel this order');
     }
 
     if (!['pending', 'processing'].includes(order.status)) {
       throw new BadRequestError('Order cannot be cancelled');
-    } else {
-      // Restore inventory
-      for (const item of order.products) {
-        const product = await Product.findById(item.product);
-        if (product) {
-          const variantKey = Object.entries(item.selectedVariants)
-            .map((key, value) => `${key}:${value}`)
-            .join('_');
-          await product.releaseInventory(variantKey, item.quantity);
+    }
+
+    // Release inventory
+    for (const item of order.products) {
+      const product = await Product.findById(item.product).session(session);
+      if (product) {
+        const variantKey = Object.entries(item.selectedVariants)
+          .map(([key, value]) => `${key}:${value}`)
+          .join('_');
+        const inventoryItem = product.inventory.find(inv => inv.variantCombination === variantKey);
+        if (inventoryItem) {
+          inventoryItem.stock += item.quantity;
+          await product.save({ session });
         }
       }
     }
@@ -237,6 +266,18 @@ export const cancelOrder = async (req: AuthRequest, res: Response, next: NextFun
 
     await session.commitTransaction();
     session.endSession();
+
+    // Send order cancellation email
+    await environment.email.service.sendTemplatedEmail(
+      order.userEmail,
+      'orderCancellation',
+      {
+        orderId: order._id,
+        frontendUrl: environment.app.frontend,
+        token: anonymousToken
+      },
+      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+    );
 
     order.status = 'cancelled';
     await order.save();
@@ -321,5 +362,126 @@ export const getOrders = async (req: Request, res: Response, next: NextFunction)
     res.json(orders);
   } catch (error) {
     next(new InternalServerError('Error fetching orders'));
+  }
+};
+
+
+// import { refundPayment } from '../services/payment/payment.service'; // You'll need to implement this
+
+export const markOrderAsReceived = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const anonymousToken = req.query.token as string;
+
+    const order = await Order.findById(id);
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    // Check authorization
+    if (!req.user && (!anonymousToken || anonymousToken !== order.anonToken)) {
+      throw new UnauthorizedError('Not authorized to mark this order as received');
+    }
+
+    if (req.user && order.user.toString() !== req.user._id.toString()) {
+      throw new UnauthorizedError('Not authorized to mark this order as received');
+    }
+
+    if (order.status !== 'shipped') {
+      throw new BadRequestError('Order must be in shipped status to be marked as received');
+    }
+
+    order.status = 'delivered';
+    await order.save();
+
+    // Send order received confirmation email
+    await environment.email.service.sendTemplatedEmail(
+      order.userEmail,
+      'orderReceived',
+      {
+        orderId: order._id,
+        frontendUrl: environment.app.frontend,
+        token: order.anonToken
+      },
+      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+    );
+
+    logger.info('Order marked as received', { id, userId: req.user?._id || 'anonymous' });
+    res.json({ message: 'Order marked as received successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const denyOrder = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (req.user?.role !== 'owner' && req.user?.role !== 'admin') {
+      throw new UnauthorizedError('Not authorized to deny orders');
+    }
+
+    const order = await Order.findById(id).session(session);
+    if (!order) {
+      throw new NotFoundError('Order not found');
+    }
+
+    if (order.status !== 'pending' && order.status !== 'processing') {
+      throw new BadRequestError('Only pending or processing orders can be denied');
+    }
+
+    // Attempt to refund the payment
+    if (order.paymentStatus === 'paid') {
+      try {
+        await refundPayment(order.transactionId);
+      } catch (error) {
+        throw new PaymentError('Failed to refund payment. Please handle this manually.');
+      }
+    }
+
+    // Release inventory
+    for (const item of order.products) {
+      const product = await Product.findById(item.product).session(session);
+      if (product) {
+        const variantKey = Object.entries(item.selectedVariants)
+          .map(([key, value]) => `${key}:${value}`)
+          .join('_');
+        const inventoryItem = product.inventory.find(inv => inv.variantCombination === variantKey);
+        if (inventoryItem) {
+          inventoryItem.stock += item.quantity;
+          await product.save({ session });
+        }
+      }
+    }
+
+    order.status = 'denied';
+    order.denialReason = reason;
+    await order.save({ session });
+
+    await session.commitTransaction();
+
+    // Send order denial email
+    await environment.email.service.sendTemplatedEmail(
+      order.userEmail,
+      'orderDenied',
+      {
+        orderId: order._id,
+        reason: reason,
+        frontendUrl: environment.app.frontend,
+        token: order.anonToken
+      },
+      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+    );
+
+    logger.info('Order denied', { id, reason, deniedBy: req.user._id });
+    res.json({ message: 'Order denied successfully' });
+  } catch (error) {
+    await session.abortTransaction();
+    next(error);
+  } finally {
+    session.endSession();
   }
 };

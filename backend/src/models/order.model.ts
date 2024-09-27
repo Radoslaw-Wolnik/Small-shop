@@ -3,6 +3,8 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IOrderDocument extends Document {
   user: Schema.Types.ObjectId;
+  userEmail: string;
+  isAnonymousOrder: boolean;
   products: {
     product: Schema.Types.ObjectId;
     quantity: number;
@@ -10,7 +12,8 @@ export interface IOrderDocument extends Document {
     price: number;
   }[];
   totalAmount: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'disputed';
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'disputed' | 'denied';
+  denialReason?: string;
   
   shippingAddress: Schema.Types.ObjectId;
   shippingMethod: string;
@@ -36,6 +39,8 @@ export interface IOrderDocument extends Document {
 
 const orderSchema = new Schema<IOrderDocument>({
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  userEmail: { type: String, required: true },
+  isAnonymousOrder: { type: Boolean, default: true },
   products: [{
     product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true },

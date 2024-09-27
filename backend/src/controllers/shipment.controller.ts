@@ -3,11 +3,13 @@ import { Request, Response, NextFunction } from 'express';
 import { CustomError, NotFoundError, InternalServerError, BadRequestError, ExpiredTokenError, UnauthorizedError } from '../utils/custom-errors.util';
 import logger from '../utils/logger.util';
 import Order from '../models/order.model';
+import User from '../models/user.model';
 // Import shipping provider services
 import { generatePocztaPolskaShippingLabel, trackPocztaPolskaShipment } from '../services/shipment/poczta-polska.service';
 import { generateDHLShippingLabel, trackDHLShipment } from '../services/shipment/dhl.service';
 import { generateAmazonShippingLabel, trackAmazonShipment } from '../services/shipment/amazon.service';
 import { generateInPostShippingLabel, trackInPostShipment } from '../services/shipment/inPost.service';
+import environment from '../config/environment';
 
 export const generateShippingLabel = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -94,7 +96,7 @@ export const trackShipment = async (req: AuthRequest, res: Response, next: NextF
 export const updateShippingStatus = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { orderId } = req.params;
-    const { status } = req.body;
+    const { status, trackingNumber } = req.body;
 
     const order = await Order.findById(orderId);
     if (!order) {
@@ -102,7 +104,23 @@ export const updateShippingStatus = async (req: AuthRequest, res: Response, next
     }
 
     order.status = status;
+    order.trackingNumber = trackingNumber;
     await order.save();
+
+
+    // Send shipping status update email
+    await environment.email.service.sendTemplatedEmail(
+      order.userEmail,
+      'shipmentUpdate',
+      {
+        orderId: order._id,
+        shippingStatus: status,
+        trackingNumber,
+        frontendUrl: environment.app.frontend,
+        token: order.anonToken
+      },
+      { id: order.user.toString(), isAnonymous: order.isAnonymousOrder }
+    );
 
     logger.info('Shipping status updated', { orderId, status, userId: req.user!.id });
     res.json({ message: 'Shipping status updated successfully' });

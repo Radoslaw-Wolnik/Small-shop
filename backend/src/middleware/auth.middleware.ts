@@ -45,11 +45,11 @@ export const setTokenCookie = (res: Response, token: string): void => {
   });
 };
 
-export const generateAnonymousToken = async (user: IUserDocument): Promise<string> => {
+export const generateAnonymousToken = async (userId: string, email: string): Promise<string> => {
   const payload = {
-    id: user._id,
+    id: userId,
     isAnonymous: true,
-    email: await user.getDecryptedEmail()
+    email: email
   };
 
   return jwt.sign(payload, environment.auth.jwtSecret, {

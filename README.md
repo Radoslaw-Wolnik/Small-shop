@@ -7,20 +7,15 @@
 - Anonymous : folks that buy without account or dispiute via magic link
 
 ## ToDo: 
- - [ ] should there be an inventory schema and controller for inventory maangement (there is quite a mess with it becouse variants can affect the inventroy status)
-
- - [ ] Anything that user that is not reqistered do, treat as logged in anonymous user - using token logged in - and just treat as AuthRequest 
- 
  - [ ] for payment some key menagement system idk with Hardware Security Module (HSM)
-
- - [ ] update routes for making orders (seperate anonymous and logged in)
- - [ ] route for copied product and in general chack if all functions in controllers have its corresponding routes
+ - [ ] refund payment
 
  - [ ] fix payment services (mostly problem with getting user data if needed from order.userID)
  - [ ] fix shipment services - tbh idk what wrong in there (a lot)
 
 ## ToDo later mby:
  - [ ] check promotion controller
+ - [ ] inventory schema is not needed here but could be incoporated
  - [ ] del product should be in bloated product controller insted of admin one (its there becouse the product is so bloated)
  - [ ] if emailError should i eg not register user etc ? catch(emailError) {logger.error('Failed to send verification email', { error: emailError, userId: user._id });}
 
