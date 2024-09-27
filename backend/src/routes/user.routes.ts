@@ -6,8 +6,7 @@ import {
   removeFromWishlist, 
   updateProfile,
   addShippingInfo,
-  updateShippingInfo,
-  deactivateMyAccount,
+  updateShippingInfo
 } from '../controllers/user.controller.js';
 import  { authenticateJWT } from '../middleware/auth.middleware';
 import { uploadProfilePicture } from '../middleware/upload.middleware';
@@ -27,9 +26,5 @@ router.delete('/wishlist/:productId', removeFromWishlist);
 
 router.post('/shipping-info', addShippingInfo);
 router.put('/shipping-info/:id', updateShippingInfo);
-
-router.delete('/me/:token', deactivateMyAccount)
-// im not sure if to generate token to make sure if user really wants to delete his profile or not
-// or better to deactivate and after a week the users profile will be deleted
 
 export default router;

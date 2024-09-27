@@ -187,24 +187,3 @@ export const updateShippingInfo = async (req: AuthRequest, res: Response, next: 
     next(error);
   }
 };
-
-export const deactivateMyAccount = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
-  try {
-    if (!req.user) {
-      throw new UnauthorizedError('User not authenticated');
-    }
-    // one must first create deactivation token
-    const { token } = req.params;
-    if (token !== req.user.deactivationToken) {
-      throw new UnauthorizedError('Invalid deactivation token');
-    }
-
-    req.user.deactivated = new Date();
-    await req.user.save();
-
-    logger.warn('User account deactivated', { userId: req.user._id });
-    res.json({ message: 'Your account has been deactivated' });
-  } catch (error) {
-    next(error);
-  }
-};
