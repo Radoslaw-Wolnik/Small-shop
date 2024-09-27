@@ -10,7 +10,7 @@ import {
 
 const router = express.Router();
 
-router.get('/track/:orderId', handleAnonymousAuth, trackShipment);
+router.get('/track/:orderId/:token', handleAnonymousAuth, trackShipment);
 
 // Ensure all routes are protected and require login
 router.use(authenticateJWT);

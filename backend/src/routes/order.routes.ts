@@ -21,9 +21,9 @@ const router = express.Router();
 // not logged in new order
 router.post('/', createOrder);
 // token from email for not logged in
-router.get('/:id', handleAnonymousAuth, getOrderDetails);
-router.put('/:id/cancel', handleAnonymousAuth, cancelOrder);
-router.put('/:id/recived', handleAnonymousAuth, markOrderAsReceived);
+router.get('/:id/:token', handleAnonymousAuth, getOrderDetails);
+router.put('/:id/cancel/:token', handleAnonymousAuth, cancelOrder);
+router.put('/:id/recived/:token', handleAnonymousAuth, markOrderAsReceived);
 
 
 // Ensure all routes are protected and require user privileges

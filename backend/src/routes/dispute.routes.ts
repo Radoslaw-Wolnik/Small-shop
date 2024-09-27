@@ -25,9 +25,9 @@ import { uploadDisputeAttachments } from '../middleware/upload.middleware';
 
 const router = express.Router();
 
-router.post('/:orderId', handleAnonymousAuth, createDispute);
-router.post('/upload/:orderId', handleAnonymousAuth, multerErrorHandler(uploadDisputeAttachments), createDispute);
-router.get('/:id', handleAnonymousAuth, getDisputeDetails);
+router.post('/:orderId/:token', handleAnonymousAuth, createDispute);
+router.post('/upload/:orderId/:token', handleAnonymousAuth, multerErrorHandler(uploadDisputeAttachments), createDispute);
+router.get('/:id/:token', handleAnonymousAuth, getDisputeDetails);
 
 // for logged in users
 router.use(authenticateJWT);
