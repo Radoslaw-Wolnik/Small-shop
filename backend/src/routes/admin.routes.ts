@@ -9,7 +9,7 @@ import {
   updateEmailTemplate,
   deleteProduct,
   deleteInactiveUsers,
-  updateSensitiveData
+  updateConfiguration
 } from '../controllers/admin.controller';
 
 const router: Router = express.Router();
@@ -27,6 +27,6 @@ router.put('/email-template/:id', updateEmailTemplate);
 router.delete('/product/:id', deleteProduct);
 
 router.delete('/inactive-users', authenticateJWT, deleteInactiveUsers);
-router.put('/sensitive-data', authenticateJWT, updateSensitiveData);
+router.put('/sensitive-data', authenticateJWT, updateConfiguration);
 
 export default router;

@@ -5,6 +5,7 @@ import { NotFoundError, BadRequestError, InternalServerError, ValidationError } 
 import logger from '../utils/logger.util';
 import { sanitizeData } from '../utils/sanitize.util';
 import templateManager from '../utils/email-templates.util';
+import { ConfigService } from '../services/config.service';
 
 export const getAdmins = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -93,28 +94,30 @@ export const deleteInactiveUsers = async (req: AuthRequest, res: Response, next:
   }
 };
 
-export const updateSensitiveData = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const updateConfiguration = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { userId, newEmail, newPassword } = req.body;
-    const user = await User.findById(userId);
-    if (!user) {
-      throw new NotFoundError('User');
+    const { config } = req.body;
+
+    // Basic validation
+    if (typeof config !== 'object' || config === null) {
+      throw new ValidationError('Invalid configuration format');
     }
 
-    if (newEmail) {
-      user.email = newEmail;
-      user.isVerified = false; // Require re-verification for new email
-    }
+    // Update the configuration
+    const updatedConfig = ConfigService.updateConfiguration(config);
 
-    if (newPassword) {
-      user.password = newPassword;
-    }
+    logger.info('Configuration updated', { 
+      updatedBy: req.user?.id, 
+      changedFields: Object.keys(config) 
+    });
 
-    await user.save();
-    logger.info('Sensitive data updated', { userId, updatedBy: req.user?.id });
-    res.json({ message: 'Sensitive data updated successfully' });
+    res.json({ message: 'Configuration updated successfully', config: updatedConfig });
   } catch (error) {
-    next(error instanceof NotFoundError ? error : new InternalServerError('Error updating sensitive data'));
+    if (error instanceof ValidationError) {
+      next(error);
+    } else {
+      next(new InternalServerError('Error updating configuration'));
+    }
   }
 };
 
