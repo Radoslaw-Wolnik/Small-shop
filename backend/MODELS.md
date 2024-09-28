@@ -207,6 +207,13 @@ The `Order` model represents customer orders in the e-commerce system.
 ```typescript
 {
   user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  userInfo: {
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: false },
+    isAnonymous: { type: Boolean, default: true },
+  },
   products: [{
     product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true },
