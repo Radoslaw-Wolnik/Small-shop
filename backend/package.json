@@ -9,13 +9,7 @@
     "build": "tsc",
     "dev": "tsx watch src/server.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "populate": "tsx scripts/populate_database.ts",
-    "backup": "tsx scripts/backup_database.ts",
-    "restore": "tsx scripts/restore_database.ts",
-    "rotate-secrets": "tsx scripts/rotateSecrets.ts",
-    "start-rotation": "tsx scripts/manageRotation.ts start",
-    "check-rotation": "tsx scripts/manageRotation.ts status",
-    "cleanup-rotation": "tsx scripts/manageRotation.ts cleanup"
+    "populate": "tsx scripts/populate_database.ts"
   },
   "keywords": [],
   "author": "",
