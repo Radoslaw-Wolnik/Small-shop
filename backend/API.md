@@ -11,13 +11,14 @@
 8. [Newsletter Routes](#newsletter-routes)
 9. [Order Routes](#order-routes)
 10. [Payment Routes](#payment-routes)
-11. [Product Template Routes](#product-template-routes)
-12. [Product Routes](#product-routes)
-13. [Promotion Routes](#promotion-routes)
-14. [Shipping Routes](#shipping-routes)
+11. [Product Routes](#product-routes)
+12. [Promotion Routes](#promotion-routes)
+13. [Shipping Routes](#shipping-routes)
+14. [Site Settings Routes](#site-settings-routes)
 15. [Tag Routes](#tag-routes)
 16. [User Routes](#user-routes)
 17. [Variant Routes](#variant-routes)
+18. [Job Routes](#job-routes)
 
 ## Authentication
 
@@ -29,64 +30,63 @@ Most endpoints require authentication. Authentication is handled using HTTP-only
  - 👑 Owner authentication required
  - 🔑 Admin authentication required
 
-
 ## Admin Routes
 
 #### Get All Admins
 ```
 🔑 GET /api/admin/admins
-Response: 
+Response: [Admin]
 ```
 
 #### Get All Users
 ```
 🔑 GET /api/admin/users
-Response: 
+Response: [User]
 ```
 
 #### Delete Admin
 ```
 🔑 DELETE /api/admin/:id
-Response: 
+Response: { message: "Admin deleted successfully" }
 ```
 
 #### Add Admin
 ```
 🔑 POST /api/admin/add
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { username: string, email: string, password: string }
+Response: { message: "Admin added successfully", admin: Admin }
 ```
 
 #### Update Email Template
 ```
 🔑 PUT /api/admin/email-template/:id
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { subject: string, htmlBody: string, textBody: string }
+Response: { message: "Email template updated successfully" }
 ```
 
 #### Delete Product
 ```
 🔑 DELETE /api/admin/product/:id
-Response: 
+Response: { message: "Product deleted successfully" }
 ```
 
 #### Delete Inactive Users
 ```
 🔑 DELETE /api/admin/inactive-users
-Response: 
+Response: { message: "Inactive users deleted successfully", count: number }
 ```
 
 #### Update Sensitive Data
 ```
 🔑 PUT /api/admin/sensitive-data
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { config: object }
+Response: { message: "Configuration updated successfully", config: object }
+```
+
+#### Get Email Templates
+```
+🔑 GET /api/admin/email-templates
+Response: [string]
 ```
 
 ## Auth Routes
@@ -94,88 +94,98 @@ Response:
 #### Register
 ```
 🔓 POST /api/auth/register
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { username: string, email: string, password: string }
+Response: { message: "User registered successfully" }
 ```
 
 #### Login
 ```
 🔓 POST /api/auth/login
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { email: string, password: string }
+Response: { message: "Login successful", user: { id: string, role: string } }
 ```
 
 #### Post-Registration Login
 ```
 🔓 POST /api/auth/reg-login
-Body: {
-  // Add required fields
-}
-Response: 
+Response: { message: "Login successful", user: { id: string, role: string, isVerified: boolean } }
 ```
 
 #### Logout
 ```
 🔒 POST /api/auth/logout
-Response: 
+Response: { message: "Logout successful" }
 ```
 
 #### Refresh Token
 ```
 🔒 POST /api/auth/refresh-token
-Response: 
+Response: { message: "Token refreshed successfully", user: { id: string, role: string } }
 ```
 
 #### Send Verification Email
 ```
 🔒 POST /api/auth/send-verification
-Response: 
+Response: { message: "Verification email sent" }
 ```
 
 #### Verify Email
 ```
 🔓 GET /api/auth/verify-email/:token
-Response: 
+Response: { message: "Email verified successfully" }
 ```
 
 #### Change Password
 ```
 🔒 PUT /api/auth/change-password
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { currentPassword: string, newPassword: string }
+Response: { message: "Password changed successfully" }
 ```
 
 #### Request Password Reset
 ```
 🔓 POST /api/auth/request-password-reset
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { email: string }
+Response: { message: "Password reset email sent" }
 ```
 
 #### Reset Password
 ```
 🔓 POST /api/auth/reset-password/:token
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { password: string }
+Response: { message: "Password reset successful" }
 ```
 
 #### Create Owner Account
 ```
 🔑 POST /api/auth/create-owner
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { username: string, email: string, password: string }
+Response: { message: "Owner account created successfully", ownerId: string }
+```
+
+#### Create Magic Link
+```
+🔓 POST /api/auth/magic-link
+Body: { email: string }
+Response: { message: "Magic link sent to your email" }
+```
+
+#### Login with Magic Link
+```
+🔓 GET /api/auth/magic-login/:token
+Response: { message: "Login successful", user: { id: string, role: string } }
+```
+
+#### Request Account Deactivation
+```
+🔒 POST /api/auth/request-deactivation
+Response: { message: "Account deactivation email sent" }
+```
+
+#### Deactivate Account
+```
+🔓 POST /api/auth/deactivate/:token
+Response: { message: "Account deactivated successfully" }
 ```
 
 ## Category Routes
@@ -183,69 +193,68 @@ Response:
 #### Get Categories
 ```
 🔓 GET /api/categories
-Response: 
+Response: [Category]
 ```
 
 #### Create Category
 ```
 👑 POST /api/categories
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { name: string, description: string, parent?: string, seo: object }
+Response: Category
 ```
 
 #### Update Category
 ```
 👑 PUT /api/categories/:id
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { name?: string, description?: string, parent?: string, seo?: object }
+Response: Category
 ```
 
 #### Delete Category
 ```
 👑 DELETE /api/categories/:id
-Response: 
+Response: { message: "Category deleted successfully" }
 ```
 
 ## Dispute Routes
 
+#### Create Dispute with Token
+```
+🎟️ POST /api/disputes/:orderId/:token
+Body: { reason: string, description: string, attachments?: [string] }
+Response: Dispute
+```
+
 #### Get Dispute Details
 ```
 🔒 GET /api/disputes/:id
-Response: 
+Response: Dispute
 ```
 
 #### List Disputes
 ```
 👑 GET /api/disputes
-Response: 
-```
-
-#### Create Dispute
-```
-🔒 POST /api/disputes/:orderId
-Body: {
-  // Add required fields
-}
-Response: 
+Response: [Dispute]
 ```
 
 #### Update Dispute Status
 ```
 👑 PUT /api/disputes/:id/status
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { status: string, resolution?: string }
+Response: Dispute
 ```
 
 #### Delete Dispute
 ```
 👑 DELETE /api/disputes/:id
-Response: 
+Response: { message: "Dispute deleted successfully" }
+```
+
+#### Add Attachment to Dispute
+```
+🔒 POST /api/disputes/upload/:id
+Body: FormData
+Response: Dispute
 ```
 
 ## Health Routes
@@ -253,13 +262,18 @@ Response:
 #### Basic Health Check
 ```
 🔓 GET /api/health/basic
-Response: 
+Response: { status: "OK" }
 ```
 
 #### Detailed Health Check
 ```
 🔓 GET /api/health/details
-Response: 
+Response: { 
+  uptime: number,
+  message: string,
+  timestamp: number,
+  database: string
+}
 ```
 
 ## Message Routes
@@ -267,22 +281,27 @@ Response:
 #### Create Message
 ```
 🔒 POST /api/messages
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { content: string, category: string, relatedOrder?: string, relatedDispute?: string, attachments?: [string] }
+Response: Message
 ```
 
 #### Get Messages
 ```
 👑 GET /api/messages
-Response: 
+Response: [Message]
 ```
 
 #### Mark Message as Read
 ```
 👑 PUT /api/messages/:id/read
-Response: 
+Response: Message
+```
+
+#### Add Photos to Message
+```
+🔒 POST /api/messages/upload/:id
+Body: FormData
+Response: Message
 ```
 
 ## Newsletter Routes
@@ -290,147 +309,87 @@ Response:
 #### Create Newsletter
 ```
 👑 POST /api/newsletters
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { title: string, content: string, scheduledDate: Date }
+Response: Newsletter
 ```
 
 #### Update Newsletter
 ```
 👑 PUT /api/newsletters/:id
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { title?: string, content?: string, scheduledDate?: Date }
+Response: Newsletter
 ```
 
 #### Delete Newsletter
 ```
 👑 DELETE /api/newsletters/:id
-Response: 
+Response: { message: "Newsletter deleted successfully" }
 ```
 
 #### Schedule Newsletter
 ```
 👑 PUT /api/newsletters/:id/schedule
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { scheduledDate: Date }
+Response: Newsletter
 ```
 
 #### Send Newsletter
 ```
 👑 POST /api/newsletters/:id/send
-Response: 
+Response: { message: "Newsletter sent successfully", recipientCount: number }
 ```
 
 #### Get Subscribers
 ```
 👑 GET /api/newsletters/subscribers
-Response: 
+Response: [User]
 ```
 
 ## Order Routes
 
-#### Create Anonymous Order
-```
-🔓 POST /api/orders/anon
-Body: {
-  // Add required fields
-}
-Response: 
-```
-
-#### Get Order Details (Anonymous)
-```
-🎟️ GET /api/orders/:orderId/:token
-Response: 
-```
-
-#### Cancel Order (Anonymous)
-```
-🎟️ PUT /api/orders/cancel/:orderId/:token
-Response: 
-```
-
-#### Mark Order as Received (Anonymous)
-```
-🎟️ PUT /api/orders/received/:orderId/:token
-Response: 
-```
-
-#### Create Order (Authenticated)
+#### Create Order
 ```
 🔒 POST /api/orders
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { products: [{ product: string, quantity: number, selectedVariants: object }], shippingAddress: string, shippingMethod: string, paymentMethod: string }
+Response: Order
 ```
 
-#### Get Order Details (Authenticated)
+#### Get Order Details
 ```
 🔒 GET /api/orders/:id
-Response: 
-```
-
-#### Cancel Order (Authenticated)
-```
-🔒 PUT /api/orders/:orderId/cancel
-Response: 
-```
-
-#### Mark Order as Received (Authenticated)
-```
-🔒 PUT /api/orders/:orderId/received
-Response: 
+Response: Order
 ```
 
 #### Get User Order History
 ```
 🔒 GET /api/orders
-Response: 
+Response: [Order]
 ```
 
-#### Get All Orders (Owner)
-```
-👑 GET /api/orders
-Response: 
-```
-
-#### Update Order Status (Owner)
+#### Update Order Status
 ```
 👑 PUT /api/orders/:id/status
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { status: string }
+Response: Order
 ```
 
-#### Deny Order (Owner)
+#### Cancel Order
 ```
-👑 PUT /api/orders/:orderId/deny
-Body: {
-  // Add required fields
-}
-Response: 
+🔒 PUT /api/orders/:orderId/cancel
+Response: { message: "Order cancelled successfully" }
 ```
 
-#### Get Order Statistics (Owner)
+#### Get Order Statistics
 ```
 👑 GET /api/orders/statistics
-Response: 
+Response: { totalOrders: number, totalRevenue: number, ordersByStatus: object }
 ```
 
-#### Search Orders (Owner)
+#### Search Orders
 ```
 👑 GET /api/orders/search
-Query Parameters: {
-  // Add query parameters
-}
-Response: 
+Query Parameters: { query: string, page?: number, limit?: number }
+Response: { orders: [Order], currentPage: number, totalPages: number, total: number }
 ```
 
 ## Payment Routes
@@ -438,72 +397,28 @@ Response:
 #### Initialize Payment
 ```
 🔒 POST /api/payments/initialize
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { orderId: string, gateway: string }
+Response: { paymentUrl: string, transactionId: string }
 ```
 
 #### Handle Payment Callback
 ```
 🔓 POST /api/payments/callback/:gateway
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { /* Depends on the payment gateway */ }
+Response: { message: "Payment verified successfully" }
 ```
 
-#### Get Payment Status (Authenticated)
+#### Get Payment Status
 ```
 🔒 GET /api/payments/status/:orderId
-Response: 
+Response: { paymentStatus: string }
 ```
 
-#### Process Payment (Anonymous)
+#### Verify Payment
 ```
-🔓 POST /api/payments/process
-Body: {
-  // Add required fields
-}
-Response: 
-```
-
-#### Get Payment Status (Anonymous)
-```
-🎟️ GET /api/payments/status/:orderId/:token
-Response: 
-```
-
-## Product Template Routes
-
-#### Get Product Templates
-```
-🔓 GET /api/product-templates
-Response: 
-```
-
-#### Create Product Template
-```
-👑 POST /api/product-templates
-Body: {
-  // Add required fields
-}
-Response: 
-```
-
-#### Update Product Template
-```
-👑 PUT /api/product-templates/:id
-Body: {
-  // Add required fields
-}
-Response: 
-```
-
-#### Delete Product Template
-```
-👑 DELETE /api/product-templates/:id
-Response: 
+🔒 POST /api/payments/verify/:orderId
+Body: { /* Depends on the payment gateway */ }
+Response: { message: "Payment verified successfully" }
 ```
 
 ## Product Routes
@@ -511,125 +426,97 @@ Response:
 #### Get Products
 ```
 🔓 GET /api/products
-Response: 
-```
-
-#### Get Products by Tags
-```
-🔓 GET /api/products/tags
-Query Parameters: {
-  // Add query parameters
-}
-Response: 
-```
-
-#### Get Products by Category
-```
-🔓 GET /api/products/category
-Query Parameters: {
-  // Add query parameters
-}
-Response: 
-```
-
-#### Get Products by Tags and Category
-```
-🔓 GET /api/products/category/tags
-Query Parameters: {
-  // Add query parameters
-}
-Response: 
+Query Parameters: { category?: string, tags?: [string], page?: number, limit?: number }
+Response: { products: [Product], currentPage: number, totalPages: number, total: number }
 ```
 
 #### Get Product Details
 ```
 🔓 GET /api/products/:id
-Response: 
+Response: Product
 ```
 
 #### Create Product
 ```
 👑 POST /api/products
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { name: string, description: string, category: string, basePrice: number, variants: [object], shippingDetails: object, seo: object }
+Response: Product
 ```
 
 #### Update Product
 ```
 👑 PUT /api/products/:id
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { name?: string, description?: string, category?: string, basePrice?: number, variants?: [object], shippingDetails?: object, seo?: object }
+Response: Product
 ```
 
 #### Delete Product
 ```
 👑 DELETE /api/products/:id
-Response: 
+Response: { message: "Product deleted successfully" }
 ```
 
 #### Add Variant
 ```
 👑 POST /api/products/:productId/variants
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { variantId: string, options: [object] }
+Response: Product
+```
+
+#### Remove Variant
+```
+👑 DELETE /api/products/:productId/variants/:variantId
+Body: { deletePhotos?: boolean }
+Response: Product
 ```
 
 #### Update Inventory
 ```
 👑 PUT /api/products/:productId/inventory
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { inventory: [object] }
+Response: Product
 ```
 
 #### Update Shipping Details
 ```
 👑 PUT /api/products/:productId/shipping
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { shippingDetails: object }
+Response: Product
 ```
 
 #### Update Variant Photos
 ```
 👑 PUT /api/products/:productId/variant-photos
-Body: {
-  // Add required fields
-}
-Response: 
+Body: FormData
+Response: Product
 ```
 
-#### Upload Product Photos
+#### Save Product Photos
 ```
 👑 POST /api/products/:productId/photos
 Body: FormData
-Response: 
+Response: Product
 ```
 
-#### Add Tag to Product
+#### Add Tag
 ```
 👑 POST /api/products/:productId/add
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { tagId: string }
+Response: Product
 ```
 
-#### Remove Tag from Product
+#### Remove Tag
 ```
 👑 DELETE /api/products/:productId/remove
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { tagId: string }
+Response: Product
+```
+
+#### Copy Product
+```
+👑 POST /api/products/:productId/copy
+Body: { newName: string }
+Response: Product
 ```
 
 ## Promotion Routes
@@ -637,31 +524,27 @@ Response:
 #### Create Promotion
 ```
 👑 POST /api/promotions
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { code: string, discountType: string, discountValue: number, validFrom: Date, validUntil: Date, usageLimit: number }
+Response: Promotion
 ```
 
 #### Update Promotion
 ```
 👑 PUT /api/promotions/:id
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { code?: string, discountType?: string, discountValue?: number, validFrom?: Date, validUntil?: Date, usageLimit?: number }
+Response: Promotion
 ```
 
 #### Delete Promotion
 ```
 👑 DELETE /api/promotions/:id
-Response: 
+Response: { message: "Promotion deleted successfully" }
 ```
 
 #### List Promotions
 ```
 👑 GET /api/promotions
-Response: 
+Response: [Promotion]
 ```
 
 ## Shipping Routes
@@ -669,31 +552,57 @@ Response:
 #### Generate Shipping Label
 ```
 👑 POST /api/shipping/generate-label/:orderId
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { provider: string }
+Response: { shippingLabel: string, trackingNumber: string }
 ```
 
 #### Track Shipment
 ```
 🔒 GET /api/shipping/track/:orderId
-Response: 
+Response: { status: string, lastUpdate: Date, estimatedDelivery: Date }
 ```
 
 #### Update Shipping Status
 ```
 👑 PUT /api/shipping/status/:orderId
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { status: string }
+Response: { message: "Shipping status updated successfully" }
 ```
 
-#### Get Shipment Tracking
+## Site Settings Routes
+
+#### Get Site Settings
 ```
-🔓 GET /api/shipping/:trackingNumber
-Response: 
+🔓 GET /api/site-settings
+Response: SiteSettings
+```
+
+#### Update Site Settings
+```
+🔑 PUT /api/site-settings
+Body: { siteName?: string, siteDescription?: string, siteKeywords?: [string], socialMediaLinks?: object, logoUrl?: string }
+Response: SiteSettings
+```
+
+#### Update SEO Settings
+```
+🔑 PUT /api/site-settings/seo
+Body: { siteName?: string, siteDescription?: string, siteKeywords?: [string] }
+Response: SiteSettings
+```
+
+#### Update Social Media Links
+```
+🔑 PUT /api/site-settings/social
+Body: { socialMediaLinks: object }
+Response: SiteSettings
+```
+
+#### Update Logo
+```
+🔑 PUT /api/site-settings/logo
+Body: { logoUrl: string }
+Response: SiteSettings
 ```
 
 ## Tag Routes
@@ -701,31 +610,27 @@ Response:
 #### List Tags
 ```
 🔓 GET /api/tags
-Response: 
+Response: [Tag]
 ```
 
 #### Create Tag
 ```
 👑 POST /api/tags
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { name: string, description?: string }
+Response: Tag
 ```
 
 #### Update Tag
 ```
 👑 PUT /api/tags/:id
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { name?: string, description?: string }
+Response: Tag
 ```
 
 #### Delete Tag
 ```
 👑 DELETE /api/tags/:id
-Response: 
+Response: { message: "Tag deleted successfully" }
 ```
 
 ## User Routes
@@ -733,62 +638,48 @@ Response:
 #### Get User's Own Profile
 ```
 🔒 GET /api/users/me
-Response: 
+Response: User
 ```
 
 #### Upload Profile Picture
 ```
 🔒 PUT /api/users/upload-profile-picture
 Body: FormData
-Response: 
+Response: { message: "Profile picture updated successfully", profilePicture: string }
 ```
 
 #### Update Profile
 ```
 🔒 PUT /api/users/profile
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { /* User fields to update */ }
+Response: User
 ```
 
 #### Add to Wishlist
 ```
 🔒 POST /api/users/wishlist
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { productId: string }
+Response: User
 ```
 
 #### Remove from Wishlist
 ```
 🔒 DELETE /api/users/wishlist/:productId
-Response: 
+Response: User
 ```
 
 #### Add Shipping Info
 ```
 🔒 POST /api/users/shipping-info
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { /* Shipping address details */ }
+Response: [ShippingAddress]
 ```
 
 #### Update Shipping Info
 ```
 🔒 PUT /api/users/shipping-info/:id
-Body: {
-  // Add required fields
-}
-Response: 
-```
-
-#### Deactivate User Profile
-```
-🎟️ DELETE /api/users/me/:token
-Response: 
+Body: { /* Updated shipping address details */ }
+Response: ShippingAddress
 ```
 
 ## Variant Routes
@@ -796,35 +687,45 @@ Response:
 #### Get Variant Details
 ```
 🔓 GET /api/variants/:id
-Response: 
+Response: Variant
 ```
 
 #### Create Variant
 ```
 👑 POST /api/variants
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { name: string, changesPhoto: boolean, changesPrice: boolean, options: [string] }
+Response: Variant
 ```
 
 #### Update Variant
 ```
 👑 PUT /api/variants/:id
-Body: {
-  // Add required fields
-}
-Response: 
+Body: { name?: string, changesPhoto?: boolean, changesPrice?: boolean, options?: [string] }
+Response: Variant
 ```
 
 #### Delete Variant
 ```
 👑 DELETE /api/variants/:id
-Response: 
+Response: { message: "Variant deleted successfully" }
 ```
 
 #### Get Variants
 ```
 👑 GET /api/variants
-Response: 
+Response: [Variant]
+```
+
+## Job Routes
+
+#### Run Job
+```
+👑 POST /api/jobs/:jobName
+Response: { message: "Job completed successfully" }
+```
+
+#### Get Job Status
+```
+👑 GET /api/jobs/:jobName/status
+Response: { /* Job status details */ }
 ```
