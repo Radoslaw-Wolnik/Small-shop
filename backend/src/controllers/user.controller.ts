@@ -44,7 +44,7 @@ export const saveProfilePicture = async (req: AuthRequestWithFile, res: Response
     }
 
     // The file is already uploaded by the middleware, so we just need to save the path
-    const relativePath = `/uploads/profile-picture/${req.file.filename}`;
+    const relativePath = `/uploads/profile-picture/${req.user.id}/${req.file.filename}`;
     req.user.profilePicture = relativePath;
     await req.user.save();
 

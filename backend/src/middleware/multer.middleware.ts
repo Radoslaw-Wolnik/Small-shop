@@ -14,7 +14,8 @@ const storage = multer.diskStorage({
     let uploadPath: string;
 
     if (file.fieldname === 'profilePicture') {
-      uploadPath = 'uploads/profile_pictures/';
+      const userId = req.user?.id || 'anonymous';
+      uploadPath = `uploads/profile_pictures/${userId}`;
     } else if (file.fieldname === 'productPictures') {
       const productId = req.params.productId || 'temp'; // use temp if productID is not avaliable
       uploadPath = `uploads/products/${productId}/`;
