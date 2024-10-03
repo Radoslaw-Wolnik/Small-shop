@@ -187,3 +187,19 @@ export const updateShippingInfo = async (req: AuthRequest, res: Response, next: 
     next(error);
   }
 };
+
+
+export const updateLastActiveTime = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) {
+      throw new UnauthorizedError('User not authenticated');
+    }
+
+    req.user.lastTimeActive = new Date();
+    await req.user.save();
+
+    res.json({ message: 'Last active time updated successfully' });
+  } catch (error) {
+    next(error);
+  }
+};

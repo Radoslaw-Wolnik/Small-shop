@@ -50,9 +50,6 @@ export const login = async (req: LoginRequest, res: Response, next: NextFunction
       throw new UnauthorizedError('Please verify your email before logging in');
     }
 
-    // Update lastTimeActive
-    user.lastTimeActive = new Date();
-    await user.save();
 
     // Create and return JWT token
     const token = generateToken(user);
@@ -504,5 +501,30 @@ export const deactivateAccount = async (req: Request, res: Response, next: NextF
     res.json({ message: 'Account deactivated successfully' });
   } catch (error) {
     next(error instanceof CustomError ? error : new InternalServerError('Error deactivating account'));
+  }
+};
+
+export const reactivateAccount = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { token } = req.params;
+
+    const user = await User.findOne({
+      deactivationToken: token,
+      deactivationExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      throw new NotFoundError('Invalid or expired reactivation token');
+    }
+
+    user.deactivated = undefined;
+    user.deactivationToken = undefined;
+    user.deactivationExpires = undefined;
+
+    await user.save();
+
+    res.json({ message: 'Account reactivated successfully' });
+  } catch (error) {
+    next(error);
   }
 };
