@@ -9,7 +9,8 @@ import {
   removeFromWishlist, 
   updateProfile,
   addShippingInfo,
-  updateShippingInfo
+  updateShippingInfo,
+  updateLastActiveTime
 } from '../controllers/user.controller.js';
 
 
@@ -27,5 +28,7 @@ router.delete('/wishlist/:productId', removeFromWishlist);
 
 router.post('/shipping-info', addShippingInfo);
 router.put('/shipping-info/:id', updateShippingInfo);
+
+router.put('/last-active', updateLastActiveTime);
 
 export default router;

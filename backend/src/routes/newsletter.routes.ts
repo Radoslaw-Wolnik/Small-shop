@@ -3,6 +3,7 @@ import express from 'express';
 import { authenticateJWT } from '../middleware/auth.middleware';
 import { isOwner } from '../middleware/role.middleware';
 import {
+  getNewsletters,
   createNewsletter,
   updateNewsletter,
   deleteNewsletter,
@@ -20,6 +21,8 @@ router.use(authenticateJWT, isOwner);
 router.post('/', createNewsletter);
 router.put('/:id', updateNewsletter);
 router.delete('/:id', deleteNewsletter);
+
+router.get('/', getNewsletters);
 
 router.put('/:id/schedule', scheduleNewsletter);
 router.post('/:id/send', sendNewsletter);

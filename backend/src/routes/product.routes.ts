@@ -24,7 +24,8 @@ import {
   removeTag,
 
   updateVariantPhotos,
-  saveProductPhotos
+  saveProductPhotos,
+  getProductStatistics
 } from '../controllers/product.controller';
 
 
@@ -55,5 +56,8 @@ router.post('/products/:productId/photos', multerErrorHandler(uploadProductPhoto
 // tags
 router.post('/:productId/add', addTag);
 router.delete('/:productId/remove', removeTag);
+
+//statistics
+router.get('/statistics', isOwner, getProductStatistics);
 
 export default router;
