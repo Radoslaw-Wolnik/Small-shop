@@ -1,549 +1,299 @@
-# Mongoose Models Documentation
+# Database Models
 
-This document provides an overview of the Mongoose models used in our application. Each model represents a collection in our MongoDB database and defines the structure and behavior of the documents within that collection.
+This document describes the database models used in the Small Shop application, including their fields and important functions.
 
 ## Table of Contents
-
-1. [Address](#address)
-2. [Category](#category)
-3. [Dispute](#dispute)
-4. [EmailTemplate](#emailtemplate)
-5. [Message](#message)
-6. [Newsletter](#newsletter)
-7. [Order](#order)
-8. [Product](#product)
-9. [PromotionCode](#promotioncode)
-10. [RevokedToken](#revokedtoken)
-11. [SiteSettings](#sitesettings)
-12. [Tag](#tag)
-13. [User](#user)
-14. [Variant](#variant)
-
-## Address
-
-The `Address` model represents shipping addresses for users.
-
-#### Schema
-
-```typescript
-{
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  label: { type: String, required: true },
-  street: { type: String, required: true },
-  city: { type: String, required: true },
-  state: { type: String, required: true },
-  country: { type: String, required: true },
-  zipCode: { type: String, required: true },
-  isDefault: { type: Boolean, default: false },
-}
-```
-
-#### Fields Explanation
-
-- `user`: Reference to the User who owns this address.
-- `label`: A label for the address (e.g., "Home", "Work").
-- `street`: Street address.
-- `city`: City name.
-- `state`: State or province.
-- `country`: Country name.
-- `zipCode`: Postal or ZIP code.
-- `isDefault`: Indicates if this is the user's default address.
-
-## Category
-
-The `Category` model represents product categories in the e-commerce system.
-
-#### Schema
-
-```typescript
-{
-  name: { type: String, required: true, unique: true },
-  description: String,
-  parent: { type: Schema.Types.ObjectId, ref: 'Category' },
-  seo: {
-    metaTitle: { type: String, required: true },
-    metaDescription: { type: String, required: true },
-    keywords: [{ type: String }],
-    slug: { type: String, required: true, unique: true },
-  },
-}
-```
-
-#### Fields Explanation
-
-- `name`: The unique name of the category.
-- `description`: An optional description of the category.
-- `parent`: A reference to a parent category, allowing for hierarchical categorization.
-- `seo`: SEO-related information for the category.
-
-#### Middleware
-
-- Pre-save hook: Automatically generates the SEO slug based on the category name.
-
-## Dispute
-
-The `Dispute` model represents customer disputes related to orders.
-
-#### Schema
-
-```typescript
-{
-  order: { type: Schema.Types.ObjectId, ref: 'Order', required: true },
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  reason: { type: String, required: true },
-  description: { type: String, required: true },
-  status: { type: String, enum: ['open', 'under review', 'resolved'], default: 'open' },
-  resolution: String,
-  attachments: [{ 
-    url: String, 
-    fileType: String 
-  }],
-  messages: [{ type: Schema.Types.ObjectId, ref: 'Message' }]
-}
-```
-
-#### Fields Explanation
-
-- `order`: Reference to the disputed Order.
-- `user`: Reference to the User who opened the dispute.
-- `reason`: The main reason for the dispute.
-- `description`: A detailed description of the dispute.
-- `status`: The current status of the dispute.
-- `resolution`: Description of how the dispute was resolved.
-- `attachments`: Array of attached files related to the dispute.
-- `messages`: Array of references to Messages related to the dispute.
-
-## EmailTemplate
-
-The `EmailTemplate` model represents reusable email templates.
-
-#### Schema
-
-```typescript
-{
-  name: { type: String, required: true, unique: true },
-  subject: { type: String, required: true },
-  htmlBody: { type: String, required: true },
-  textBody: { type: String, required: true },
-  variables: [{ type: String }]
-}
-```
-
-#### Fields Explanation
-
-- `name`: A unique name for the email template.
-- `subject`: The subject line of the email.
-- `htmlBody`: The HTML content of the email template.
-- `textBody`: The plain text content of the email template.
-- `variables`: An array of variable names used within the template.
-
-## Message
-
-The `Message` model represents communication messages within the application.
-
-#### Schema
-
-```typescript
-{
-  sender: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  content: { type: String, required: true },
-  readStatus: { type: Boolean, default: false },
-  category: { type: String, enum: ['dispute', 'contact', 'other'], required: true },
-  relatedOrder: { type: Schema.Types.ObjectId, ref: 'Order' },
-  relatedDispute: { type: Schema.Types.ObjectId, ref: 'Dispute' },
-  relatedProduct: { type: Schema.Types.ObjectId, ref: 'Product' },
-  attachments: [{ 
-    url: String, 
-    fileType: String 
-  }],
-}
-```
-
-#### Fields Explanation
-
-- `sender`: Reference to the User who sent the message.
-- `content`: The content of the message.
-- `readStatus`: Indicates whether the message has been read.
-- `category`: The category of the message.
-- `relatedOrder`: Reference to a related Order, if applicable.
-- `relatedDispute`: Reference to a related Dispute, if applicable.
-- `relatedProduct`: Reference to a related Product, if applicable.
-- `attachments`: Array of attached files.
-
-## Newsletter
-
-The `Newsletter` model represents newsletter campaigns.
-
-#### Schema
-
-```typescript
-{
-  title: { type: String, required: true },
-  content: { type: String, required: true },
-  featuredProducts: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
-  scheduledDate: { type: Date, required: true },
-  sentDate: Date,
-  recipients: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-  status: { type: String, enum: ['draft', 'scheduled', 'sent', 'cancelled'], default: 'draft' },
-}
-```
-
-#### Fields Explanation
-
-- `title`: The title of the newsletter.
-- `content`: The main content of the newsletter.
-- `featuredProducts`: Array of references to featured products.
-- `scheduledDate`: The date when the newsletter is scheduled to be sent.
-- `sentDate`: The date when the newsletter was actually sent.
-- `recipients`: Array of references to Users who will receive the newsletter.
-- `status`: The current status of the newsletter.
-
-## Order
-
-The `Order` model represents customer orders in the e-commerce system.
-
-#### Schema
-
-```typescript
-{
-  user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-  userInfo: {
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true },
-    phone: { type: String, required: false },
-    isAnonymous: { type: Boolean, default: true },
-  },
-  products: [{
-    product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-    quantity: { type: Number, required: true },
-    selectedVariants: { type: Map, of: String },
-    price: { type: Number, required: true },
-  }],
-  totalAmount: { type: Number, required: true },
-  status: { 
-    type: String, 
-    enum: ['pending', 'processing', 'shipped', 'delivered', 'completed', 'cancelled', 'disputed'], 
-    default: 'pending' 
-  },
-  shippingAddress: { type: Schema.Types.ObjectId, ref: 'Address', required: true },
-  shippingMethod: { type: String, required: true },
-  shippingProvider: { type: String },
-  shippingLabel: { type: String },
-  trackingNumber: String,
-  paymentMethod: { type: String, required: true },
-  paymentGateway: { type: String },
-  paymentStatus: { type: String, enum: ['pending', 'paid', 'failed'], default: 'pending' },
-  transactionId: { type: String },
-  paymentUrl: { type: String },
-  promoCodeUsed: String,
-  disputeId: { type: Schema.Types.ObjectId, ref: 'Dispute' },
-  anonToken: String,
-  anonTokenExpires: Date,
-}
-```
-
-#### Fields Explanation
-
-- `user`: Reference to the User who placed the order.
-- `products`: Array of ordered products, including quantity, selected variants, and price.
-- `totalAmount`: The total amount of the order.
-- `status`: The current status of the order.
-- `shippingAddress`: Reference to the Address for shipping.
-- `shippingMethod`, `shippingProvider`, `shippingLabel`, `trackingNumber`: Shipping-related information.
-- `paymentMethod`, `paymentGateway`, `paymentStatus`: Payment-related information.
-- `transactionId`: ID of the payment transaction.
-- `paymentUrl`: URL for completing the payment, if applicable.
-- `promoCodeUsed`: The promotion code used for the order, if any.
-- `disputeId`: Reference to a Dispute related to this order, if any.
-- `anonToken`, `anonTokenExpires`: Fields for handling orders from non-logged-in users.
-
-## Product
-
-The `Product` model represents products available in the e-commerce system.
-
-#### Schema
-
-```typescript
-{
-  name: { type: String, required: true },
-  description: { type: String, required: true },
-  category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
-  tags: [{ type: Schema.Types.ObjectId, ref: 'Tag' }],
-  basePrice: { type: Number, required: true },
-  variants: [{
-    variant: { type: Schema.Types.ObjectId, ref: 'Variant', required: true },
-    options: [{
-      name: { type: String, required: true },
-      price: Number,
-    }],
-  }],
-  defaultPhoto: { type: String, required: true },
-  images: [{
-    url: { type: String, required: true },
-    altText: { type: String, required: true },
-    variantOption: {
-      variant: { type: Schema.Types.ObjectId, ref: 'Variant' },
-      option: String,
-    },
-  }],
-  inventory: [{
-    variantCombination: { type: String, required: true },
-    stock: { type: Number, required: true },
-  }],
-  shippingDetails: {
-    weight: { type: Number, required: true },
-    dimensions: {
-      length: { type: Number, required: true },
-      width: { type: Number, required: true },
-      height: { type: Number, required: true },
-    },
-    variantWeights: [{
-      variant: { type: Schema.Types.ObjectId, ref: 'Variant' },
-      option: String,
-      weight: Number,
-    }],
-  },
-  seo: {
-    metaTitle: { type: String, required: true },
-    metaDescription: { type: String, required: true },
-    keywords: [{ type: String }],
-    slug: { type: String, required: true, unique: true },
-  },
-  isActive: { type: Boolean, default: true },
-}
-```
-
-#### Fields Explanation
-
-- `name`, `description`: Basic product information.
-- `category`: Reference to the product's category.
-- `tags`: Array of references to Tags associated with the product.
-- `basePrice`: The base price of the product.
-- `variants`: Array of product variants and their options.
-- `defaultPhoto`: The main product image.
-- `images`: Array of additional product images, including variant-specific images.
-- `inventory`: Stock information for different variant combinations.
-- `shippingDetails`: Shipping-related information, including weights for different variants.
-- `seo`: SEO-related information, including a unique slug.
-- `isActive`: Indicates if the product is currently active.
-
-#### Methods
-
-- `getStructuredData()`: Generates schema.org structured data for the product.
-- `reserveInventory(variantCombination, quantity)`: Reserves inventory for a specific variant combination.
-- `releaseInventory(variantCombination, quantity)`: Releases previously reserved inventory.
-
-#### Static Methods
-
-- `findBySlug(slug)`: Finds a product by its SEO slug.
-
-## PromotionCode
-
-The `PromotionCode` model represents promotional codes used for discounts.
-
-#### Schema
-
-```typescript
-{
-  code: { type: String, required: true, unique: true },
-  discountType: { type: String, enum: ['percentage', 'fixed'], required: true },
-  discountValue: { type: Number, required: true },
-  validFrom: { type: Date, required: true },
-  validUntil: { type: Date, required: true },
-  usageLimit: { type: Number, default: 0 },
-  usageCount: { type: Number, default: 0 },
-  isActive: { type: Boolean, default: true },
-}
-```
-
-#### Fields Explanation
-
-- `code`: A unique string representing the promotion code.
-- `discountType`: The type of discount, either 'percentage' or 'fixed' amount.
-- `discountValue`: The value of the discount.
-- `validFrom`: The date from which the code becomes valid.
-- `validUntil`: The expiration date of the code.
-- `usageLimit`: The maximum number of times the code can be used (0 for unlimited).
-- `usageCount`: The number of times the code has been used.
-- `isActive`: Indicates whether the code is currently active.
-
-## RevokedToken
-
-The `RevokedToken` model keeps track of revoked authentication tokens.
-
-#### Schema
-
-```typescript
-{
-  token: { type: String, required: true, unique: true },
-  expiresAt: { type: Date, required: true }
-}
-```
-
-#### Fields Explanation
-
-- `token`: The unique identifier of the revoked token.
-- `expiresAt`: The date and time when the token expires.
-
-## SiteSettings
-
-The `SiteSettings` model stores global site configuration settings.
-
-#### Schema
-
-```typescript
-{
-  siteName: { type: String, required: true, default: "My Site" },
-  siteDescription: { type: String, required: true, default: "Welcome to my site" },
-  siteKeywords: [{ type: String }],
-  socialMediaLinks: {
-    facebook: String,
-    twitter: String,
-    instagram: String,
-  },
-  logoUrl: { type: String, default: "/default-logo.png" },
-}
-```
-
-#### Fields Explanation
-
-- `siteName`: The name of the website.
-- `siteDescription`: A brief description of the website.
-- `siteKeywords`: An array of keywords relevant to the website.
-- `socialMediaLinks`: An object containing social media profile URLs.
-- `logoUrl`: The URL of the website's logo image.
-
-## Tag
-
-The `Tag` model represents tags that can be associated with products.
-
-#### Schema
-
-```typescript
-{
-  name: { type: String, required: true, unique: true },
-  description: { type: String },
-}
-```
-
-#### Fields Explanation
-
-- `name`: The unique name of the tag.
-- `description`: An optional description of the tag.
+1. [User](#user)
+2. [Product](#product)
+3. [Order](#order)
+4. [Category](#category)
+5. [Tag](#tag)
+6. [Variant](#variant)
+7. [Address](#address)
+8. [Dispute](#dispute)
+9. [Message](#message)
+10. [Newsletter](#newsletter)
+11. [PromotionCode](#promotioncode)
+12. [RevokedToken](#revokedtoken)
+13. [SiteSettings](#sitesettings)
+14. [EmailTemplate](#emailtemplate)
 
 ## User
 
-The `User` model represents user accounts in the application.
+Represents a user in the system.
 
-#### Schema
+### Fields
 
-```typescript
-{
-  isAnonymous: { type: Boolean, default: false },
-  username: { 
-    type: String, 
-    unique: true,
-    sparse: true,
-    trim: true,
-    minlength: [3, 'Username must be at least 3 characters long'],
-    maxlength: [30, 'Username cannot exceed 30 characters'],
-    match: [/^[a-zAZ0-9_-]+$/, 'Username can only contain letters, numbers, underscores and hyphens']
-  },
-  email: { 
-    type: String, 
-    required: [true, 'Email is required'],
-    unique: true,
-    validate: {
-      validator: (value: string) => isEmail(value),
-      message: 'Invalid email format'
-    }
-  },
-  emailHash: { type: String, index: true, unique: true },
-  password: { 
-    type: String, 
-    minlength: [8, 'Password must be at least 8 characters long']
-   },
-  profilePicture: { 
-    type: String,
-    validate: {
-      validator: (value: string) => /^\/uploads\/profile-picture\/[\w-]+\.(jpg|jpeg|png|gif)$/.test(value),
-      message: 'Invalid profile picture URL format'
-    }
-  },
-  isVerified: { type: Boolean, default: false },
-  verificationToken: { type: String },
-  verificationTokenExpires: Date,
-  resetPasswordToken: { type: String },
-  resetPasswordExpires: Date,
-  oneTimeLoginToken: { type: String },
-  oneTimeLoginExpires: Date,
-  deactivationToken: { type: String },
-  deactivationExpires: Date,
-  role: { type: String, enum: ['client', 'owner', 'admin'], default: 'client' },
-  wishlist: [{ type: Types.ObjectId, ref: 'Product' }],
-  shippingAddresses: [{ type: Types.ObjectId, ref: 'Address' }],
-  notificationPreferences: {
-    email: { type: Boolean, default: true },
-    newsletters: { type: Boolean, default: false },
-    orderUpdates: { type: Boolean, default: true },
-  },
-  lastTimeActive: Date,
-  deactivated: Date,
-}
-```
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| isAnonymous | Boolean | Indicates if the user is anonymous |
+| username | String | User's username (unique) |
+| email | String | User's email (encrypted, unique) |
+| emailHash | String | Hashed email for faster lookups |
+| password | String | Hashed password |
+| FirstName | String | User's first name |
+| LastName | String | User's last name |
+| Phone | String | User's phone number (optional) |
+| profilePicture | String | URL to user's profile picture |
+| isVerified | Boolean | Indicates if the user's email is verified |
+| verificationToken | String | Token for email verification |
+| verificationTokenExpires | Date | Expiration date for verification token |
+| resetPasswordToken | String | Token for password reset |
+| resetPasswordExpires | Date | Expiration date for password reset token |
+| oneTimeLoginToken | String | Token for one-time login |
+| oneTimeLoginExpires | Date | Expiration date for one-time login token |
+| deactivationToken | String | Token for account deactivation |
+| deactivationExpires | Date | Expiration date for deactivation token |
+| role | String | User's role (client, owner, admin) |
+| wishlist | [ObjectId] | Array of product IDs in user's wishlist |
+| shippingAddresses | [ObjectId] | Array of user's shipping address IDs |
+| notificationPreferences | Object | User's notification preferences |
+| lastTimeActive | Date | Timestamp of user's last activity |
+| deactivated | Date | Timestamp of account deactivation (if applicable) |
 
-#### Fields Explanation
+### Methods and Hooks
 
-- `isAnonymous`: Indicates if this is an anonymous user account.
-- `username`: The user's unique username with validation rules.
-- `email`: The user's email address (stored encrypted).
-- `emailHash`: A hash of the email for faster lookups.
-- `password`: The user's hashed password.
-- `profilePicture`: URL of the user's profile picture.
-- `isVerified`: Indicates if the user's email is verified.
-- `verificationToken` and `verificationTokenExpires`: Used for email verification process.
-- `resetPasswordToken` and `resetPasswordExpires`: Used for password reset process.
-- `oneTimeLoginToken` and `oneTimeLoginExpires`: Used for magic link authentication.
-- `deactivationToken` and `deactivationExpires`: Used for account deactivation process.
-- `role`: The user's role in the system (client, owner, or admin).
-- `wishlist`: An array of product IDs in the user's wishlist.
-- `shippingAddresses`: An array of references to the user's shipping addresses.
-- `notificationPreferences`: User's preferences for different types of notifications.
-- `lastTimeActive`: Timestamp of the user's last activity.
-- `deactivated`: Timestamp of when the account was deactivated, if applicable.
+- `pre('save')`: Hashes password and encrypts email before saving
+- `getDecryptedEmail()`: Decrypts and returns the user's email
+- `comparePassword(candidatePassword)`: Compares a given password with the stored hashed password
+- `findByEmail(email)`: Static method to find a user by their email
 
-#### Methods
+## Product
 
-- `getDecryptedEmail()`: Returns the decrypted email of the user.
-- `comparePassword(candidatePassword)`: Compares a given password with the user's hashed password.
+Represents a product in the shop.
 
-#### Static Methods
+### Fields
 
-- `findByEmail(email)`: Finds a user by their email address.
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| name | String | Product name |
+| description | String | Product description |
+| category | ObjectId | Reference to the product's category |
+| tags | [ObjectId] | Array of tag IDs associated with the product |
+| basePrice | Number | Base price of the product |
+| variants | [Object] | Array of variant objects |
+| defaultPhoto | String | URL of the default product photo |
+| images | [Object] | Array of product image objects |
+| inventory | [Object] | Array of inventory objects |
+| shippingDetails | Object | Shipping details for the product |
+| seo | Object | SEO-related information |
+| isActive | Boolean | Indicates if the product is active |
 
-#### Middleware
+### Methods and Hooks
 
-- Pre-save hook: Hashes the password and encrypts the email before saving.
+- `pre('save')`: Generates SEO slug from the product name
+- `getStructuredData()`: Returns structured data for the product (for SEO)
+- `reserveInventory(variantCombination, quantity)`: Reserves inventory for a specific variant
+- `releaseInventory(variantCombination, quantity)`: Releases previously reserved inventory
+- `findBySlug(slug)`: Static method to find a product by its SEO slug
+
+## Order
+
+Represents a customer order.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| user | ObjectId | Reference to the user who placed the order |
+| userInfo | Object | User information at the time of order |
+| products | [Object] | Array of ordered product objects |
+| totalAmount | Number | Total amount of the order |
+| status | String | Current status of the order |
+| shippingAddress | ObjectId | Reference to the shipping address |
+| shippingMethod | String | Chosen shipping method |
+| shippingProvider | String | Shipping provider (optional) |
+| shippingLabel | String | Shipping label (optional) |
+| trackingNumber | String | Tracking number (optional) |
+| paymentMethod | String | Chosen payment method |
+| paymentGateway | String | Payment gateway (optional) |
+| paymentStatus | String | Current payment status |
+| transactionId | String | Transaction ID (optional) |
+| paymentUrl | String | Payment URL (optional) |
+| promoCodeUsed | String | Promo code used (optional) |
+| disputeId | ObjectId | Reference to a dispute (optional) |
+| anonToken | String | Token for anonymous orders (optional) |
+| anonTokenExpires | Date | Expiration date for anonymous token |
+
+## Category
+
+Represents a product category.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| name | String | Category name (unique) |
+| description | String | Category description |
+| parent | ObjectId | Reference to parent category (optional) |
+| seo | Object | SEO-related information |
+
+### Methods and Hooks
+
+- `pre('save')`: Generates SEO slug from the category name
+
+## Tag
+
+Represents a product tag.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| name | String | Tag name (unique) |
+| description | String | Tag description (optional) |
 
 ## Variant
 
-The `Variant` model represents product variants, such as size or color options.
+Represents a product variant.
 
-#### Schema
+### Fields
 
-```typescript
-{
-  name: { type: String, required: true },
-  changesPhoto: { type: Boolean, default: false },
-  changesPrice: { type: Boolean, default: false },
-  options: [{ type: String }],
-}
-```
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| name | String | Variant name |
+| changesPhoto | Boolean | Indicates if the variant changes the product photo |
+| changesPrice | Boolean | Indicates if the variant affects the price |
+| options | [String] | Array of variant options |
 
-#### Fields Explanation
+## Address
 
-- `name`: The name of the variant (e.g., "Size", "Color").
-- `changesPhoto`: Indicates if this variant requires different product photos.
-- `changesPrice`: Indicates if this variant affects the product price.
-- `options`: An array of possible options for this variant (e.g., ["Small", "Medium", "Large"]).
+Represents a shipping address.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| user | ObjectId | Reference to the user |
+| label | String | Address label |
+| street | String | Street address |
+| buildingNumber | String | Building number |
+| city | String | City |
+| state | String | State |
+| country | String | Country |
+| zipCode | String | ZIP code |
+| isDefault | Boolean | Indicates if this is the default address |
+
+## Dispute
+
+Represents a dispute for an order.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| order | ObjectId | Reference to the disputed order |
+| user | ObjectId | Reference to the user who opened the dispute |
+| reason | String | Reason for the dispute |
+| description | String | Detailed description of the dispute |
+| status | String | Current status of the dispute |
+| resolution | String | Resolution of the dispute (optional) |
+| attachments | [Object] | Array of attachment objects |
+| messages | [ObjectId] | Array of message IDs related to the dispute |
+
+## Message
+
+Represents a message in the system.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| sender | ObjectId | Reference to the sender |
+| content | String | Message content |
+| readStatus | Boolean | Indicates if the message has been read |
+| category | String | Message category |
+| relatedOrder | ObjectId | Reference to related order (optional) |
+| relatedDispute | ObjectId | Reference to related dispute (optional) |
+| relatedProduct | ObjectId | Reference to related product (optional) |
+| attachments | [Object] | Array of attachment objects |
+
+## Newsletter
+
+Represents a newsletter.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| title | String | Newsletter title |
+| content | String | Newsletter content |
+| featuredProducts | [ObjectId] | Array of featured product IDs |
+| scheduledDate | Date | Scheduled send date |
+| sentDate | Date | Actual send date (optional) |
+| recipients | [ObjectId] | Array of recipient user IDs |
+| status | String | Current status of the newsletter |
+
+## PromotionCode
+
+Represents a promotional code.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| code | String | Promotion code (unique) |
+| discountType | String | Type of discount (percentage or fixed) |
+| discountValue | Number | Value of the discount |
+| validFrom | Date | Start date of promotion |
+| validUntil | Date | End date of promotion |
+| usageLimit | Number | Maximum number of uses |
+| usageCount | Number | Current number of uses |
+| isActive | Boolean | Indicates if the promotion is active |
+
+## RevokedToken
+
+Represents a revoked JWT token.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| token | String | The revoked token (unique) |
+| expiresAt | Date | Expiration date of the token |
+
+## SiteSettings
+
+Represents global site settings.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| siteName | String | Name of the site |
+| siteDescription | String | Description of the site |
+| siteKeywords | [String] | Array of site keywords |
+| socialMediaLinks | Object | Social media links |
+| logoUrl | String | URL of the site logo |
+
+### Methods
+
+- `findOneOrCreate(condition, doc)`: Static method to ensure only one document exists
+
+## EmailTemplate
+
+Represents an email template.
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| _id | ObjectId | Unique identifier |
+| name | String | Template name (unique) |
+| subject | String | Email subject |
+| htmlBody | String | HTML content of the email |
+| textBody | String | Plain text content of the email |
+| variables | [String] | Array of variable names used in the template |

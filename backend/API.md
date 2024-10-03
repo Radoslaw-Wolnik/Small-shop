@@ -19,6 +19,7 @@
 16. [User Routes](#user-routes)
 17. [Variant Routes](#variant-routes)
 18. [Job Routes](#job-routes)
+19. [Adress Routes](#address-routes)
 
 ## Authentication
 
@@ -188,6 +189,13 @@ Response: { message: "Account deactivation email sent" }
 Response: { message: "Account deactivated successfully" }
 ```
 
+#### Reactivate Account
+```
+🔓 POST /api/auth/reactivate/:token
+Response: { message: "Account reactivated successfully" }
+```
+
+
 ## Category Routes
 
 #### Get Categories
@@ -306,6 +314,13 @@ Response: Message
 
 ## Newsletter Routes
 
+#### Get Newsletters
+```
+👑 GET /api/newsletters/
+Body: { title: string, content: string, scheduledDate: Date }
+Response: [Newsletter]
+```
+
 #### Create Newsletter
 ```
 👑 POST /api/newsletters
@@ -346,6 +361,12 @@ Response: [User]
 ```
 
 ## Order Routes
+
+#### Create Order
+```
+👑 GET /api/orders/
+Response: [Order]
+```
 
 #### Create Order
 ```
@@ -519,6 +540,12 @@ Body: { newName: string }
 Response: Product
 ```
 
+#### Get Product Statistics
+```
+👑 GET /api/products/statistics
+Response: { totalProducts: number, lowStockProducts: number, outOfStockProducts: number, inventoryValue: number, topSellingProducts: [Product] }
+```
+
 ## Promotion Routes
 
 #### Create Promotion
@@ -545,6 +572,19 @@ Response: { message: "Promotion deleted successfully" }
 ```
 👑 GET /api/promotions
 Response: [Promotion]
+```
+
+#### Validate Promotion
+```
+🔓 GET /api/promotions/validate/:code
+Response: { valid: boolean, discountType: string, discountValue: number }
+```
+
+#### Apply Promotion
+```
+🔒 POST /api/promotions/apply
+Body: { code: string, orderId: string }
+Response: { message: "Promotion applied successfully" }
 ```
 
 ## Shipping Routes
@@ -607,6 +647,18 @@ Response: SiteSettings
 
 ## Tag Routes
 
+#### Get Tag by ID
+```
+🔓 GET /api/tags/:id
+Response: Tag
+```
+
+#### Get products by Tag
+```
+🔓 GET /api/tags/:id/products
+Response: [Product]
+```
+
 #### List Tags
 ```
 🔓 GET /api/tags
@@ -639,6 +691,12 @@ Response: { message: "Tag deleted successfully" }
 ```
 🔒 GET /api/users/me
 Response: User
+```
+
+#### Update last time active
+```
+🔒 PUT /api/users/last-active
+Response: { message: "Last active time updated successfully" }
 ```
 
 #### Upload Profile Picture
@@ -728,4 +786,44 @@ Response: { message: "Job completed successfully" }
 ```
 👑 GET /api/jobs/:jobName/status
 Response: { /* Job status details */ }
+```
+
+## Address Routes
+
+#### Create Address
+```
+🔒 POST /api/address
+Body: { label: string, street: string, city: string, state: string, country: string, zipCode: string }
+Response: Address
+```
+
+#### Update Address
+```
+🔒 PUT /api/address/:id
+Body: { label?: string, street?: string, city?: string, state?: string, country?: string, zipCode?: string }
+Response: Address
+```
+
+#### Delete Address
+```
+🔒 DELETE /api/address/:id
+Response: { message: "Address deleted successfully" }
+```
+
+#### Get User Addresses
+```
+🔒 GET /api/address
+Response: [Address]
+```
+
+#### Get Address by ID
+```
+🔒 GET /api/address/:id
+Response: Address
+```
+
+#### Set Default Address
+```
+🔒 PUT /api/address/:id/default
+Response: Address
 ```
