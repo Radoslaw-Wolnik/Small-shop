@@ -22,6 +22,7 @@ import userRoutes from './routes/user.routes';
 import variantRoutes from './routes/variant.routes';
 import jobRoutes from './routes/job.routes';
 import siteSettingsRoutes from './routes/site-settings.routes';
+import addressRoutes from './routes/address.routes'
 
 import { errorHandler } from './middleware/error.middleware';
 import { addRequestId } from './middleware/request-id.middleware';
@@ -84,6 +85,7 @@ apiRouter.use('/promotions', promotionRoutes);
 apiRouter.use('/tags', tagRoutes);
 apiRouter.use('/jobs', jobRoutes);
 apiRouter.use('/site-settings', siteSettingsRoutes);
+apiRouter.use('/address', addressRoutes);
 
 // Mount the router on the /api path
 app.use('/api', apiRouter);
